@@ -41,10 +41,11 @@ import com.exc33ded.library.ui.common.BookCover
 @Composable
 fun FindBookScreen(
     isbn: String?,
+    query: String?,
     onBack: () -> Unit,
     onPicked: (BookCandidate) -> Unit,
     vm: FindBookViewModel = hiltViewModel<FindBookViewModel, FindBookViewModel.Factory>(
-        creationCallback = { it.create(isbn) },
+        creationCallback = { it.create(isbn, query) },
     ),
 ) {
     val s by vm.state.collectAsStateWithLifecycle()

@@ -1,5 +1,8 @@
 package com.exc33ded.library.ui.nav
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,6 +14,8 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Search
@@ -34,6 +39,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -47,12 +54,14 @@ import com.exc33ded.library.ui.book.BookEditScreen
 import com.exc33ded.library.ui.categories.CategoriesScreen
 import com.exc33ded.library.ui.common.PlaceholderScreen
 import com.exc33ded.library.ui.find.FindBookScreen
+import com.exc33ded.library.ui.imports.ImportScreen
 import com.exc33ded.library.ui.library.LibraryScreen
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
 @Composable
@@ -80,6 +89,20 @@ fun AppNav() {
             else -> backStack.add(FindBookKey(isbn))
         }
     }
+    val navVm: AppNavViewModel = hiltViewModel()
+    val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(100)) { uris ->
+        if (uris.isNotEmpty()) { navVm.import(uris); backStack.add(ImportKey) }
+    }
+    var cameraFile by remember { mutableStateOf<File?>(null) }
+    val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val f = cameraFile
+        if (ok && f != null) { navVm.importFile(f.absolutePath); backStack.add(ImportKey) }
+    }
+    fun launchCamera() {
+        val f = File(context.filesDir, "camera/${System.currentTimeMillis()}.jpg").apply { parentFile?.mkdirs() }
+        cameraFile = f
+        takePhoto.launch(FileProvider.getUriForFile(context, "${context.packageName}.files", f))
+    }
     Scaffold(
         // Inner screens own their top insets (TopAppBar / statusBarsPadding); avoids a double status-bar gap.
         contentWindowInsets = WindowInsets(0),
@@ -92,6 +115,8 @@ fun AppNav() {
                     onScan = { scanIsbn() },
                     onSearch = { backStack.add(FindBookKey()) },
                     onManual = { backStack.add(BookEditKey()) },
+                    onPhoto = { launchCamera() },
+                    onGallery = { pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 )
             }
         },
@@ -109,6 +134,7 @@ fun AppNav() {
                     LibraryScreen(
                         onOpenBook = { id -> backStack.add(BookDetailKey(id)) },
                         onManageCategories = { backStack.add(CategoriesKey) },
+                        onOpenImports = { backStack.add(ImportKey) },
                     )
                 }
                 entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
@@ -122,19 +148,27 @@ fun AppNav() {
                     )
                 }
                 entry<BookEditKey> { key ->
-                    BookEditScreen(bookId = key.id, prefill = key.prefill, onDone = { backStack.removeLastOrNull() })
+                    BookEditScreen(bookId = key.id, prefill = key.prefill, importId = key.importId, onDone = { backStack.removeLastOrNull() })
                 }
                 entry<FindBookKey> { key ->
                     FindBookScreen(
                         isbn = key.isbn,
+                        query = key.query,
                         onBack = { backStack.removeLastOrNull() },
                         onPicked = { c ->
                             backStack.removeLastOrNull() // replace Find with Edit so Back returns to the library
-                            backStack.add(BookEditKey(prefill = c))
+                            backStack.add(BookEditKey(prefill = c, importId = key.importId))
                         },
                     )
                 }
                 entry<CategoriesKey> { CategoriesScreen(onBack = { backStack.removeLastOrNull() }) }
+                entry<ImportKey> {
+                    ImportScreen(
+                        onBack = { backStack.removeLastOrNull() },
+                        onEdit = { id, c -> backStack.add(BookEditKey(prefill = c, importId = id)) },
+                        onSearch = { id, q -> backStack.add(FindBookKey(query = q, importId = id)) },
+                    )
+                }
             },
         )
     }
@@ -153,6 +187,8 @@ private fun BottomBar(
     onScan: () -> Unit,
     onSearch: () -> Unit,
     onManual: () -> Unit,
+    onPhoto: () -> Unit,
+    onGallery: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
     NavigationBar {
@@ -162,6 +198,10 @@ private fun BottomBar(
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
             FloatingActionButton(onClick = { menu = true }) { Icon(Icons.Filled.Add, contentDescription = "Add book") }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                DropdownMenuItem(text = { Text("Photo of cover") }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) },
+                    onClick = { menu = false; onPhoto() })
+                DropdownMenuItem(text = { Text("Import from gallery") }, leadingIcon = { Icon(Icons.Filled.PhotoLibrary, null) },
+                    onClick = { menu = false; onGallery() })
                 DropdownMenuItem(text = { Text("Scan ISBN") }, leadingIcon = { Icon(Icons.Filled.QrCodeScanner, null) },
                     onClick = { menu = false; onScan() })
                 DropdownMenuItem(text = { Text("Search") }, leadingIcon = { Icon(Icons.Filled.Search, null) },

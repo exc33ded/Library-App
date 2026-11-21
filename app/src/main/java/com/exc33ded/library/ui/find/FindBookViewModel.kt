@@ -28,15 +28,21 @@ data class FindUiState(
 @HiltViewModel(assistedFactory = FindBookViewModel.Factory::class)
 class FindBookViewModel @AssistedInject constructor(
     private val lookup: MetadataLookup,
-    @Assisted private val isbn: String?,
+    @Assisted("isbn") private val isbn: String?,
+    @Assisted("query") private val initialQuery: String?,
 ) : ViewModel() {
-    @AssistedFactory interface Factory { fun create(isbn: String?): FindBookViewModel }
+    @AssistedFactory interface Factory { fun create(@Assisted("isbn") isbn: String?, @Assisted("query") query: String?): FindBookViewModel }
 
     private val _state = MutableStateFlow(FindUiState())
     val state: StateFlow<FindUiState> = _state
     private var job: Job? = null
 
-    init { isbn?.let { lookupIsbn(it) } }
+    init {
+        when {
+            isbn != null -> lookupIsbn(isbn)
+            !initialQuery.isNullOrBlank() -> { _state.update { it.copy(query = initialQuery) }; search() }
+        }
+    }
 
     fun setQuery(q: String) = _state.update { it.copy(query = q) }
 

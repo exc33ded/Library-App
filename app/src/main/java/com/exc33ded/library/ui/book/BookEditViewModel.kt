@@ -6,6 +6,7 @@ import com.exc33ded.library.data.BookRepository
 import com.exc33ded.library.data.Ids
 import com.exc33ded.library.data.db.BookEntity
 import com.exc33ded.library.data.db.CategoryEntity
+import com.exc33ded.library.imports.ImportRepository
 import com.exc33ded.library.metadata.BookCandidate
 import com.exc33ded.library.metadata.CoverStore
 import com.exc33ded.library.metadata.suggestCategories
@@ -34,10 +35,12 @@ data class EditUiState(
 class BookEditViewModel @AssistedInject constructor(
     private val repo: BookRepository,
     private val covers: CoverStore,
-    @Assisted private val bookId: String?,
+    private val imports: ImportRepository,
+    @Assisted("bookId") private val bookId: String?,
     @Assisted private val prefill: BookCandidate?,
+    @Assisted("importId") private val importId: String?,
 ) : ViewModel() {
-    @AssistedFactory interface Factory { fun create(bookId: String?, prefill: BookCandidate?): BookEditViewModel }
+    @AssistedFactory interface Factory { fun create(@Assisted("bookId") bookId: String?, prefill: BookCandidate?, @Assisted("importId") importId: String?): BookEditViewModel }
 
     private var original: BookEntity = BookEntity(id = bookId ?: Ids.new(), title = "")
     private var preselectDone = bookId != null // only auto-select suggested categories once, for new books
@@ -63,6 +66,9 @@ class BookEditViewModel @AssistedInject constructor(
                         coverPreview = p.coverUrl,
                     )
                 }
+            }
+            if (prefill?.coverUrl == null && importId != null) {
+                imports.get(importId)?.photoPath?.let { p -> _state.update { it.copy(coverPreview = p) } }
             }
         }
         viewModelScope.launch {
@@ -101,8 +107,12 @@ class BookEditViewModel @AssistedInject constructor(
         _state.update { it.copy(saving = true) }
         viewModelScope.launch {
             val remote = s.coverPreview?.takeIf { it.startsWith("http") }
-            val coverPath = remote?.let { covers.download(it, original.id) } ?: original.coverPath
+            val photo = importId?.let { imports.get(it)?.photoPath }
+            val coverPath = remote?.let { covers.download(it, original.id) }
+                ?: photo?.let { covers.copyLocal(it, original.id) }
+                ?: original.coverPath
             val id = repo.saveBook(s.form.applyTo(original).copy(coverPath = coverPath), s.selectedCategories)
+            importId?.let { imports.markDone(it) }
             _state.update { it.copy(savedId = id, saving = false) }
         }
     }

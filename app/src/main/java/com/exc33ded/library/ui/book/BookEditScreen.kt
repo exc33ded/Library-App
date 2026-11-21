@@ -45,9 +45,10 @@ import com.exc33ded.library.ui.common.StatusSelector
 fun BookEditScreen(
     bookId: String?,
     prefill: BookCandidate?,
+    importId: String?,
     onDone: () -> Unit,
     vm: BookEditViewModel = hiltViewModel<BookEditViewModel, BookEditViewModel.Factory>(
-        creationCallback = { it.create(bookId, prefill) },
+        creationCallback = { it.create(bookId, prefill, importId) },
     ),
 ) {
     val s by vm.state.collectAsStateWithLifecycle()

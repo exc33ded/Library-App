@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,9 +37,11 @@ import com.exc33ded.library.ui.common.StatusSelector
 fun LibraryScreen(
     onOpenBook: (String) -> Unit,
     onManageCategories: () -> Unit,
+    onOpenImports: () -> Unit,
     vm: LibraryViewModel = hiltViewModel(),
 ) {
     val s by vm.state.collectAsStateWithLifecycle()
+    val pending by vm.openImports.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(
             value = s.filter.query, onValueChange = vm::setQuery, singleLine = true,
@@ -47,6 +50,7 @@ fun LibraryScreen(
         )
         StatusSelector(s.filter.status, vm::setStatus, Modifier.fillMaxWidth(), allowNone = true)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (pending > 0) item { AssistChip(onClick = onOpenImports, label = { Text("Review imports ($pending)") }) }
             item { FilterChip(s.filter.categoryId == null, { vm.setCategory(null) }, { Text("All") }) }
             items(s.categories, key = { it.id }) { c ->
                 FilterChip(s.filter.categoryId == c.id, { vm.setCategory(c.id) }, { Text(c.name) })
