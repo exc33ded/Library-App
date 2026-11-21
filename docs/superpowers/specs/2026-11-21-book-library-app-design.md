@@ -224,3 +224,17 @@ JSON schema on the target phone (measure latency); 40 photos through the queue.
   alongside Open Library; downscale to ~1600 px long edge before OCR/VLM. Ground truth for the
   benchmark lives in `docs/Books-Photo/labels.csv` (file,title,author), drafted then confirmed by the user.
 - Final app name: open.
+
+## 14. Benchmark results
+
+**2026-11-22 — Phase 2b, OCR (ML Kit Latin) + Open Library only (no Google Books key), emulator, 96 photos:**
+strict title match 32/96 (33%); 23 "wrong", 41 failed (38 no match, 2 network, 1 no text).
+- ~9 of the "wrong" are the right work under its original-language title (La Peste, Белые ночи,
+  Der Proceß, 女のいない男たち, Trotzdem Ja zum Leben sagen) or a shortened title (Wimpy Kid "The Last
+  Straw") → effectively ~41/96 (43%).
+- Main causes: OCR misreads on display fonts break exact-token search ("velloweace", "vircinla");
+  Urdu/Arabic-script covers unreadable by Latin OCR; taglines/other-title text leaking into the query
+  ("thovsand splendid sons" on The Kite Runner); publisher-only text on some Islamic-press covers.
+- Next fixes (cheap → expensive): prefer English titles (OL `lang=en` / Google Books with a key);
+  query variants (author line alone, top line alone, fuzzy terms); then Phase 3 on-device vision model
+  reading title/author directly.

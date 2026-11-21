@@ -45,8 +45,11 @@ def main(db_path, labels_path, media_path):
 
     ok, wrong, failed, unknown = [], [], [], []
     for source, state, query, result, error in rows:
-        media_id = re.search(r"(\d+)$", source)
-        name = names.get(media_id.group(1)) if media_id else None
+        if source.startswith("/"):  # file path (camera / debug ImportDirReceiver)
+            name = source.rsplit("/", 1)[-1]
+        else:  # picker content:// URI ending in the MediaStore _id
+            media_id = re.search(r"(\d+)$", source)
+            name = names.get(media_id.group(1)) if media_id else None
         truth = labels.get(name)
         if truth is None:
             unknown.append(source)
@@ -71,6 +74,7 @@ def main(db_path, labels_path, media_path):
 
 
 if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows console default is cp1252
     if len(sys.argv) != 4:
         sys.exit(__doc__)
     main(*sys.argv[1:4])
