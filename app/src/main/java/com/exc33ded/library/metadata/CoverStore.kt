@@ -31,4 +31,11 @@ class CoverStore @Inject constructor(
     } catch (e: Exception) {
         null
     }
+
+    /** Use the user's own photo as the cover (no online cover found). */
+    suspend fun copyLocal(path: String, bookId: String): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            File(path).copyTo(File(ctx.filesDir, "covers/$bookId.jpg").apply { parentFile?.mkdirs() }, overwrite = true).absolutePath
+        }.getOrNull()
+    }
 }

@@ -16,4 +16,6 @@ object DatabaseModule {
     @Provides @Singleton
     fun database(@ApplicationContext ctx: Context): AppDatabase =
         Room.databaseBuilder(ctx, AppDatabase::class.java, "library.db").build()
+
+    @Provides fun importDao(db: AppDatabase) = db.importDao()
 }

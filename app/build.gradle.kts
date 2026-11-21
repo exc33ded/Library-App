@@ -66,6 +66,10 @@ dependencies {
     implementation(libs.coil.network.ktor3)
     implementation(libs.play.services.code.scanner)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
+    implementation(libs.mlkit.text.recognition)
 
     testImplementation(libs.junit)
     testImplementation(libs.ktor.client.mock)
