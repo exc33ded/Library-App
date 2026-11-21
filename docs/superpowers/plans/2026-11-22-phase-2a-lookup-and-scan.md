@@ -80,7 +80,8 @@ kotlinx-coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-cor
 Add at the top of the file, after the `plugins { }` block:
 
 ```kotlin
-val localProps = java.util.Properties().apply {
+import java.util.Properties  // at top of file
+val localProps = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
 ```
