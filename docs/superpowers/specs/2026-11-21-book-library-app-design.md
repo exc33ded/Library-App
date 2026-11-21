@@ -5,17 +5,20 @@ Research basis: `reports/Open source Android book app base.md`
 
 ## 1. Goal
 
-A personal, single-user, multi-device Android book library (Goodreads-like) where books are added by
-camera scan, cover photo, batch gallery import, or manual entry; enriched by on-device Gemma 4; kept
-offline-first in Room and synced/backed up to Supabase; with a Material 3 Expressive UI where motion
-quality is a first-class requirement.
+A personal, single-user Android book library (Goodreads-like) where books are added by
+camera scan, cover photo, batch gallery import, or manual entry; enriched by on-device AI; stored
+**only on the phone** (Room) with a user-driven export/import backup; with a Material 3 Expressive UI
+where motion quality is a first-class requirement.
+
+> **Decision 2026-11-22:** Supabase / cloud sync dropped — phone-only storage. The Room schema keeps
+> its sync-ready columns (`updatedAt`, `deleted`, `dirty`, client UUIDs) so cloud sync can be added
+> later without a migration.
 
 ### Success criteria
 - Add a book by ISBN scan in < 3 s (online).
 - Batch import of the user's existing 30–50 book photos completes in the background; >= 80% of
   photos produce a correct title+author with no manual edit (measured on that set) — proposed
   target, adjust if you like.
-- Every change made offline appears on a second device within one sync cycle after reconnecting.
 - Export → wipe → import restores the full library including covers.
 - Scrolling the library grid and all signature transitions run without visible jank on the target phone.
 
@@ -45,7 +48,6 @@ tn3w/Shelf (MIT, with attribution), lift the Gemma download/engine code from Goo
 | Google Code Scanner | 16.1.0 |
 | LiteRT-LM | `com.google.ai.edge.litertlm:litertlm-android:0.19.1` |
 | Models (all `.litertlm`, pinned HF commits, one runtime) | text: Qwen3-0.6B int4 (328 MiB, Apache-2.0) default; vision: LFM2.5-VL-1.6B int4 (1.30 GB, LFM Open License — verify terms) optional; Gemma 4 E2B (2.58 GB, Apache-2.0) opt-in "experimental" on < 8 GB, default on >= 8 GB; E4B on >= 12 GB |
-| supabase-kt BOM | 3.9.0 (auth, postgrest, storage) — Ktor 3.x |
 | Coil 3 + coil-network-okhttp | 3.6.3 |
 | Vico (compose-m3) | 3.3.1 |
 | RSS-Parser (prof18) | 6.2.0 |
@@ -57,7 +59,7 @@ minSdk 31, target/compileSdk latest.
 ```
 app/            navigation (Nav3), MaterialExpressiveTheme(MotionScheme.expressive()), bottom bar
 core/data       Room DB + DAOs + repositories (single source of truth)
-core/sync       Supabase silent sign-in, LWW sync worker, cover upload, JSON+zip export/import
+core/backup     JSON+zip export/import (no cloud sync)
 core/metadata   Open Library -> Google Books lookup chain, cover download
 core/ai         model download/management, LiteRT-LM engine, extract + summarize
 core/scan       Code Scanner, CameraX capture, ML Kit barcode + OCR on stills
@@ -65,21 +67,21 @@ feature/library cover grid, category tabs, status filter, search, swipe-to-chang
 feature/book    detail, edit, delete, progress logging, AI summary
 feature/add     scan / photo / batch import queue + review cards / manual form
 feature/feed    RSS tab + "New from your authors" tab
-feature/profile goal ring, stats, streaks, badges, settings (model, sync, backup)
+feature/profile goal ring, stats, streaks, badges, settings (model, backup)
 ```
 
 **Implementation note:** starts as a single Gradle `app` module with one package per box above
 (`data`, `ui.library`, …); split into Gradle modules only if build times or boundaries demand it.
 
 Each module exposes a small interface (e.g. `BookRepository`, `MetadataLookup`, `BookExtractor`,
-`Summarizer`, `SyncEngine`) so it can be tested with fakes and swapped (e.g. AICore later).
+`Summarizer`) so it can be tested with fakes and swapped (e.g. AICore later).
 
-## 5. Data model (Room; mirrored in Supabase Postgres)
+## 5. Data model (Room, on the phone)
 
-All synced tables carry: `id` UUID (client-generated), `user_id` (server default `auth.uid()`),
-`updated_at` (server-set by trigger; local copy for display), `deleted` bool, local-only `dirty` bool. Exceptions to avoid duplicates from offline edits on two
-devices: `badges` uses `badge_id` as primary key; `book_categories` uses a deterministic UUID
-derived from (book_id, category_id).
+Main tables carry sync-ready columns (unused while phone-only, kept to avoid a future migration):
+`id` UUID (client-generated), `updated_at`, `deleted` (soft delete), `dirty`. `badges` uses
+`badge_id` as primary key; `book_categories` uses a deterministic UUID derived from (book_id,
+category_id) — this also makes import-merge idempotent.
 
 | Table | Fields |
 |---|---|
@@ -93,22 +95,16 @@ derived from (book_id, category_id).
 | feed_items (local only, cache) | feed_id/author_key, title, link, published_at, read |
 | import_queue (local only) | uri, state (PENDING/PROCESSING/REVIEW/DONE/FAILED), result_json, error |
 
-## 6. Sync & backup
+## 6. Backup (phone-only)
 
-- **Auth:** no login UI. Supabase URL, anon key, and a single user's email/password live in
-  `local.properties` -> `BuildConfig` (never committed). App signs in silently on first run; RLS
-  restricts every table and the storage bucket to `auth.uid()`. The service_role key is never in the app.
-  Caveat: the credentials are baked into the APK, so anyone holding the APK has full access to this
-  account — acceptable only because the APK is personal and never shared. **Disable public sign-ups**
-  in Supabase Auth settings so the extractable anon key can't be used to create accounts.
-- **Sync worker** (WorkManager; on app start, debounced after writes, periodic 6 h, network-constrained):
-  1. push dirty rows as upserts -> clear dirty;
-  2. pull rows `updated_at > lastPulledAt` -> merge, last-write-wins per row;
-  3. upload/download covers. Covers resized on-device to ~600 px WebP, stored at private bucket
-     path `{uid}/{bookId}.webp` with owner-only SELECT/INSERT/UPDATE policies.
-- **Paused/unreachable backend** = offline; app fully usable; sync status shown in Profile.
-- **Backup:** Profile -> Backup -> Export writes a `.zip` (JSON of all tables + cover files) via the
-  Storage Access Framework; Import merges by `id`. Required because Supabase Free has no backups.
+- No cloud, no accounts, no credentials in the APK.
+- **Export:** Profile -> Backup -> Export writes a `.zip` (JSON of all tables + cover files) via the
+  Storage Access Framework, so the user can save it to Google Drive, the PC, etc. Profile shows
+  "last exported N days ago" as a gentle reminder.
+- **Import:** merges by `id`, newer `updatedAt` wins — so importing the same backup twice is harmless
+  and it doubles as "move to a new phone".
+- Network is still used only for book lookups (Open Library / Google Books), cover downloads, RSS, and
+  the one-off AI model download.
 
 ## 7. Adding books & AI
 
@@ -125,7 +121,7 @@ Scan ISBN · Take cover photo · Import from gallery · Manual entry · (Search 
    paragraph (`ai_summary_source = DESCRIPTION`). If none found: paragraph from cover + OCR text,
    labelled "from cover" (`COVER`). User can edit (`USER`).
 5. Categories suggested from Open Library subjects mapped to the user's categories; editable.
-6. Result -> review card -> user confirms -> saved to Room (dirty) -> sync.
+6. Result -> review card -> user confirms -> saved to Room.
 
 **Batch import:** Photo Picker multi-select (limit from `MediaStore.getPickImagesMaxLimit()`),
 persist URI permissions, enqueue in `import_queue`; one sequential `CoroutineWorker` with foreground
@@ -163,7 +159,7 @@ back to OCR result; unreadable image -> FAILED with retry; no network -> queued 
 - Badges: rules in code (first book, 10/25/50 books, 5 categories, 1,000/10,000 pages, 7/30-day
   streak, first DNF "permission to quit"), evaluated after each status/progress change; unlock
   animation + haptic.
-- Settings: AI model, sync status/manual sync, export/import, feeds.
+- Settings: AI model, export/import (with last-export date), feeds.
 
 ## 10. UI & motion (first-class requirement)
 
@@ -175,7 +171,7 @@ back to OCR result; unreadable image -> FAILED with retry; no network -> queued 
   `animateItem()` placement animations, items keyed by id.
 - **Shared element:** cover grid -> detail via `SharedTransitionLayout` around `NavDisplay`,
   `sharedElement("cover-$id")`; predictive back scrubs it back into the grid.
-- **Pull-to-refresh with tension** (Library: pull = manual sync; Feed: pull = refetch feeds):
+- **Pull-to-refresh with tension** (Feed: pull = refetch feeds; Library: stretch overscroll only):
   `PullToRefreshBox` + custom indicator using `distanceFraction`
   with a diminishing-returns curve, expressive `LoadingIndicator`, `GestureThresholdActivate`
   haptic at threshold; system stretch overscroll elsewhere.
@@ -191,20 +187,20 @@ back to OCR result; unreadable image -> FAILED with retry; no network -> queued 
 1. Skeleton + library CRUD, statuses, categories, manual entry, theme/motion scheme.
 2. Scan + metadata lookup + cover photo + batch import queue (no AI: OCR + lookup).
 3. Gemma: model download/settings, extraction, summaries; accuracy run on user's photo set.
-4. Supabase sync + covers + export/import.
+4. Backup: export/import zip (cloud sync dropped 2026-11-22).
 5. Profile: goal, stats, streaks, badges.
 6. Feed: RSS + author follow.
 7. Motion polish: shared elements, pull tension, swipe status, haptics, baseline profile.
 
 **De-risk first (start of phase 2/3/4):** one cover through LiteRT-LM at 1120 visual tokens with a
-JSON schema on the target phone (measure latency); 40 photos through the queue; one push/pull cycle
-against a free Supabase project.
+JSON schema on the target phone (measure latency); 40 photos through the queue.
+
 
 ## 12. Testing
 
 - Unit (JVM): ISBN checksum/validation, metadata response mapping, LWW merge logic, badge rules,
   streak computation, export/import round-trip, subject->category mapping.
-- Room DAO tests (in-memory DB); sync worker against fake `SyncEngine`.
+- Room DAO tests (in-memory DB); export→import round-trip test.
 - Instrumented: one end-to-end add-book flow with fake extractor; Compose UI tests for library filter
   and status change.
 - Manual accuracy benchmark: the user's 30–50 photos -> % correct title+author, avg seconds/photo,

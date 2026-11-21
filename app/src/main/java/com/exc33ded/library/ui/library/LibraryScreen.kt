@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.exc33ded.library.data.db.BookEntity
-import com.exc33ded.library.ui.common.CoverPlaceholder
+import com.exc33ded.library.ui.common.BookCover
 import com.exc33ded.library.ui.common.PlaceholderScreen
 import com.exc33ded.library.ui.common.StatusSelector
 
@@ -71,7 +71,7 @@ fun LibraryScreen(
 
 @Composable
 private fun BookTile(b: BookEntity, modifier: Modifier) = Column(modifier) {
-    CoverPlaceholder(b.title)
+    BookCover(b.title, b.coverPath)
     Text(b.title, style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
     if (b.authors.isNotBlank())
         Text(b.authors, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)

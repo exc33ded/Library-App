@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -34,15 +36,18 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.exc33ded.library.metadata.BookCandidate
+import com.exc33ded.library.ui.common.BookCover
 import com.exc33ded.library.ui.common.StatusSelector
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun BookEditScreen(
     bookId: String?,
+    prefill: BookCandidate?,
     onDone: () -> Unit,
     vm: BookEditViewModel = hiltViewModel<BookEditViewModel, BookEditViewModel.Factory>(
-        creationCallback = { it.create(bookId) },
+        creationCallback = { it.create(bookId, prefill) },
     ),
 ) {
     val s by vm.state.collectAsStateWithLifecycle()
@@ -53,13 +58,14 @@ fun BookEditScreen(
         TopAppBar(
             title = { Text(if (bookId == null) "Add book" else "Edit book") },
             navigationIcon = { IconButton(onDone) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-            actions = { TextButton(vm::save) { Text("Save") } },
+            actions = { TextButton(vm::save, enabled = !s.saving) { Text(if (s.saving) "Saving…" else "Save") } },
         )
     }) { pad ->
         Column(
             Modifier.fillMaxSize().padding(pad).imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (s.coverPreview != null) BookCover(s.form.title, s.coverPreview, Modifier.width(120.dp))
             val f = s.form
             OutlinedTextField(f.title, { v -> vm.edit { it.copy(title = v) } }, Modifier.fillMaxWidth(),
                 label = { Text("Title *") }, isError = s.error == FormError.TitleRequired, singleLine = true)
@@ -77,6 +83,14 @@ fun BookEditScreen(
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 s.categories.forEach { c ->
                     FilterChip(c.id in s.selectedCategories, { vm.toggleCategory(c.id) }, { Text(c.name) })
+                }
+            }
+            if (s.suggestions.isNotEmpty()) {
+                Text("Suggested", style = MaterialTheme.typography.labelMedium)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    s.suggestions.forEach { name ->
+                        AssistChip(onClick = { vm.addCategory(name) }, label = { Text("+ $name") })
+                    }
                 }
             }
             OutlinedTextField(newCategory, { newCategory = it }, Modifier.fillMaxWidth(),

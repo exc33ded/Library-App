@@ -44,9 +44,9 @@ Test results: `app/build/test-results/testDebugUnitTest/*.xml`. No lint/format t
 
 ## Architecture
 
-Single Gradle `app` module; packages under `com.exc33ded.library` stand in for the spec's planned modules (`data`, `di`, `ui.*`; later `sync`, `metadata`, `ai`, `scan`, `feed`, `profile`).
+Single Gradle `app` module; packages under `com.exc33ded.library` stand in for the spec's planned modules (`data`, `di`, `ui.*`; later `backup`, `metadata`, `ai`, `scan`, `feed`, `profile`).
 
-- **Room is the single source of truth.** All writes go through `data/BookRepository.kt`, which stamps `updatedAt`, sets `dirty = true`, and soft-deletes (`deleted = true`). Rows are never hard-deleted — this is what lets Phase 4's last-write-wins Supabase sync push dirty rows and propagate tombstones. DAO queries filter `deleted = 0`.
+- **Room is the single source of truth.** All writes go through `data/BookRepository.kt`, which stamps `updatedAt`, sets `dirty = true`, and soft-deletes (`deleted = true`). Rows are never hard-deleted — storage is phone-only (cloud sync dropped 2026-11-22), but these sync-ready columns are kept so a cloud copy can be added later without a migration; backup import merges by id + newer updatedAt. DAO queries filter `deleted = 0`.
 - **Sync-safe IDs:** client-generated UUIDs (`data/Ids.kt`). Book↔category links use `Ids.pair(bookId, categoryId)` (deterministic) so the same link created offline on two devices doesn't duplicate.
 - **Domain rules are pure functions** in `data/BookRules.kt` (`withStatus`, `withProgress`: start/finish timestamps, reaching the last page marks READ). Form validation (`ui/book/BookForm.kt`) and library filtering (`ui/library/LibraryFilter.kt`) are also pure and unit-tested; ViewModels just combine flows.
 - **UI:** Compose + Navigation 3. `ui/nav/Keys.kt` holds `@Serializable NavKey`s; `ui/nav/AppNav.kt` owns the back stack, bottom bar (Library · Feed · [add] · Stats · Profile), and `entryProvider`. Top-level tabs reset the stack. ViewModels are Hilt; screens with an id use assisted injection (`hiltViewModel<VM, VM.Factory>(creationCallback = { it.create(id) })`).
@@ -54,7 +54,7 @@ Single Gradle `app` module; packages under `com.exc33ded.library` stand in for t
 
 ## Project rules
 
-- The GitHub repo `exc33ded/Library-App` is **public**: `local.properties` (Supabase credentials, Google Books key in later phases) and `docs/Books-Photo/` (96 private test photos used for the Phase 2/3 accuracy benchmark) are gitignored and must stay that way.
+- The GitHub repo `exc33ded/Library-App` is **public**: `local.properties` (Google Books key) and `docs/Books-Photo/` (96 private test photos used for the Phase 2/3 accuracy benchmark) are gitignored and must stay that way.
 - Target phone is a 6 GB RAM Samsung Galaxy A07-class device: on-device AI must stay optional and background-only (see spec §7).
-- Routine plan tasks are delegated to `opencode run` with **free models only** (e.g. `opencode/deepseek-v4.1-flash-free`) with `OPENCODE_PERMISSION='{"edit":"allow","bash":"deny","webfetch":"deny"}'` (non-interactive runs can't approve shell commands). Claude reviews the diff, runs builds/tests, and commits. Never pass secrets to opencode.
+- Routine plan tasks are delegated to a Claude subagent on **Sonnet** (Agent tool, `model: "sonnet"`), given the full task text from the plan. It may build and run tests but does not commit; the main session reviews the diff, re-runs verification, and commits. Never pass `local.properties` contents to a subagent. (Earlier tasks used `opencode run` with free models; if opencode is used again, free models only.)
 - Code adapted from tn3w/Shelf (MIT) must keep attribution; GPL projects (Openreads, Openshelf, NeverTooManyBooks) are reference-only — don't copy their code.

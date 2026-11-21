@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.exc33ded.library.data.db.ReadingStatus
-import com.exc33ded.library.ui.common.CoverPlaceholder
+import com.exc33ded.library.ui.common.BookCover
 import com.exc33ded.library.ui.common.StatusSelector
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +65,7 @@ fun BookDetailScreen(
             Modifier.fillMaxSize().padding(pad).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            CoverPlaceholder(b.title, Modifier.width(160.dp))
+            BookCover(b.title, b.coverPath, Modifier.width(160.dp))
             Text(b.title, style = MaterialTheme.typography.headlineSmall)
             if (b.authors.isNotBlank()) Text(b.authors, style = MaterialTheme.typography.titleMedium)
             StatusSelector(b.status, { if (it != null) vm.setStatus(it) }, Modifier.fillMaxWidth())
