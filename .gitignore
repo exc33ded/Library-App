@@ -1,0 +1,22 @@
+# Build
+.gradle/
+build/
+app/build/
+.kotlin/
+captures/
+*.apk
+*.aab
+# IDE
+.idea/
+*.iml
+.DS_Store
+# Secrets — NEVER commit
+local.properties
+*.jks
+*.keystore
+*.env
+secrets.properties
+# Private / large
+docs/Books-Photo/
+graft/
+.ignore
