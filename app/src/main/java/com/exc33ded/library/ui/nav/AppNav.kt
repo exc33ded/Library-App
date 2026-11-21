@@ -2,6 +2,7 @@ package com.exc33ded.library.ui.nav
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -80,6 +81,8 @@ fun AppNav() {
         }
     }
     Scaffold(
+        // Inner screens own their top insets (TopAppBar / statusBarsPadding); avoids a double status-bar gap.
+        contentWindowInsets = WindowInsets(0),
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
             AnimatedVisibility(visible = top in topLevelKeys) {
