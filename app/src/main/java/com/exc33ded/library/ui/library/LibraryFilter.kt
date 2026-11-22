@@ -16,6 +16,7 @@ fun filterBooks(books: List<BookEntity>, links: List<BookCategoryEntity>, f: Lib
     return books.filter { b ->
         (f.status == null || b.status == f.status) &&
             (inCategory == null || b.id in inCategory) &&
-            (q.isEmpty() || b.title.contains(q, ignoreCase = true) || b.authors.contains(q, ignoreCase = true))
+            (q.isEmpty() || b.title.contains(q, ignoreCase = true) || b.authors.contains(q, ignoreCase = true) ||
+                (b.notes?.contains(q, ignoreCase = true) == true))
     }
 }

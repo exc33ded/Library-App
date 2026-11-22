@@ -35,5 +35,6 @@ class AppSettingsTest {
         assertEquals(3, d.columns)
         assertEquals(ModelsLocation.PHONE, d.modelsLocation)
         assertEquals(true, d.wifiOnlyDownloads)
+        assertEquals(0L, d.lastExportAt)
     }
 }

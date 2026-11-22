@@ -13,6 +13,9 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE id = :id")
     suspend fun get(id: String): CategoryEntity?
 
+    @Query("SELECT * FROM categories")
+    suspend fun allIncludingDeleted(): List<CategoryEntity>
+
     @Upsert
     suspend fun upsert(category: CategoryEntity)
 

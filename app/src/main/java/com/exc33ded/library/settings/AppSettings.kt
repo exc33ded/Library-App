@@ -18,6 +18,7 @@ data class AppSettings(
     val showStatusBadge: Boolean = true,
     val modelsLocation: ModelsLocation = ModelsLocation.PHONE,
     val wifiOnlyDownloads: Boolean = true,
+    val lastExportAt: Long = 0L,
 )
 
 fun clampColumns(n: Int): Int = n.coerceIn(MIN_COLUMNS, MAX_COLUMNS)

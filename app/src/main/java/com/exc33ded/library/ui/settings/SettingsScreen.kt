@@ -29,7 +29,7 @@ import com.exc33ded.library.ui.theme.LocalAppSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onOpenModels: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(onBack: () -> Unit, onOpenModels: () -> Unit, onOpenBackup: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
     val s = LocalAppSettings.current
     Scaffold(topBar = {
         TopAppBar(
@@ -56,6 +56,13 @@ fun SettingsScreen(onBack: () -> Unit, onOpenModels: () -> Unit, vm: SettingsVie
 
             Text("Library", style = MaterialTheme.typography.titleMedium)
             DisplayOptions(s, vm::update)
+
+            Text("Your data", style = MaterialTheme.typography.titleMedium)
+            ListItem(
+                headlineContent = { Text("Backup & restore") },
+                supportingContent = { Text("Export or import your library") },
+                modifier = Modifier.clickable(onClick = onOpenBackup),
+            )
 
             Text("On-device AI", style = MaterialTheme.typography.titleMedium)
             ListItem(

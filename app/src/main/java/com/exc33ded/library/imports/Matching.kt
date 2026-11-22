@@ -1,6 +1,7 @@
 package com.exc33ded.library.imports
 
 import com.exc33ded.library.metadata.BookCandidate
+import com.exc33ded.library.metadata.Isbn
 import kotlin.math.abs
 
 /** A candidate scoring at least this (0..1) against the OCR text is accepted without trying more queries. */
@@ -55,4 +56,12 @@ fun buildQueries(lines: List<OcrLine>): List<String> {
     return (listOf(full, buildQuery(byHeight.take(2))) + byHeight.take(3).map { buildQuery(listOf(it)) })
         .filter { it.isNotBlank() }
         .distinct()
+}
+
+private val ISBN_CANDIDATE = Regex("(?:97[89][-\\s]?)?(?:\\d[-\\s]?){9}[\\dXx]")
+
+/** First valid ISBN-13 / ISBN-10 in the OCR text (back covers and copyright pages print one), returned as ISBN-13, or null. */
+fun extractIsbn(lines: List<OcrLine>): String? {
+    val text = lines.joinToString(" ") { it.text }
+    return ISBN_CANDIDATE.findAll(text).firstNotNullOfOrNull { Isbn.normalize(it.value) }
 }
