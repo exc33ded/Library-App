@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +52,7 @@ fun LibraryScreen(
     onOpenBook: (String) -> Unit,
     onManageCategories: () -> Unit,
     onOpenImports: () -> Unit,
+    onScanIsbn: () -> Unit,
     vm: LibraryViewModel = hiltViewModel(),
     settingsVm: SettingsViewModel = hiltViewModel(),
 ) {
@@ -68,6 +70,7 @@ fun LibraryScreen(
                 leadingIcon = { Icon(Icons.Filled.Search, null) }, placeholder = { Text("Search title or author") },
                 modifier = Modifier.weight(1f),
             )
+            IconButton(onClick = onScanIsbn) { Icon(Icons.Filled.QrCodeScanner, contentDescription = "Scan ISBN barcode") }
             IconButton(onClick = { showDisplay = true }) { Icon(Icons.Filled.GridView, contentDescription = "Display options") }
         }
         StatusSelector(s.filter.status, vm::setStatus, Modifier.fillMaxWidth(), allowNone = true)

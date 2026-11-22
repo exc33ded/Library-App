@@ -1,5 +1,6 @@
 package com.exc33ded.library.ui.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,7 +29,7 @@ import com.exc33ded.library.ui.theme.LocalAppSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(onBack: () -> Unit, onOpenModels: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
     val s = LocalAppSettings.current
     Scaffold(topBar = {
         TopAppBar(
@@ -57,11 +58,10 @@ fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) 
             DisplayOptions(s, vm::update)
 
             Text("On-device AI", style = MaterialTheme.typography.titleMedium)
-            // ponytail: disabled until the model manager (sub-project 4) exists.
             ListItem(
                 headlineContent = { Text("Models & storage") },
-                supportingContent = { Text("Coming with on-device AI") },
-                modifier = Modifier.padding(bottom = 24.dp),
+                supportingContent = { Text("Download AI models, choose where they are stored") },
+                modifier = Modifier.clickable(onClick = onOpenModels).padding(bottom = 24.dp),
             )
         }
     }
