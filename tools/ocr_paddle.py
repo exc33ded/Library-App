@@ -8,8 +8,6 @@ from paddleocr import PaddleOCR
 
 MAX_EDGE = 1600
 ROTATIONS = (0, 90, 270)
-UPRIGHT_ENOUGH = 15  # letters; below this the photo may be sideways, so also try 90/270
-DET_SIDE = 1600  # keep detection at full prep size: 960 was ~3x faster but made recognition much worse (YELLOWFACE -> YELLLLAGE)
 
 
 def make_ocr():
@@ -42,7 +40,7 @@ def read_result(res):
 
 def recognize(ocr, image):
     lines = []
-    for res in ocr.predict(np.array(image), text_det_limit_side_len=DET_SIDE, text_det_limit_type="max"):
+    for res in ocr.predict(np.array(image)):
         texts, polys = read_result(res)
         for text, poly in zip(texts, polys):
             if not str(text).strip():
@@ -78,13 +76,16 @@ def main():
     for name in sorted(n for n in os.listdir(photos_dir) if n.lower().endswith(".jpg")):
         print(f"OCR: {name}", file=sys.stderr)
         base = prepare(os.path.join(photos_dir, name))
-        lines = recognize(ocr, base)
-        if letter_count(lines) < UPRIGHT_ENOUGH:
-            lines = max(
-                [lines] + [recognize(ocr, base.rotate(deg, expand=True)) for deg in ROTATIONS[1:]],
-                key=letter_count,
-            )
+        # Photos are often sideways: read at 0/90/270 and keep the read with most letters (same rule as the app's ML Kit reader).
+        # A shortcut that skipped the rotations for "enough" upright text, or a 960 px detection cap, both gave much worse results.
+        lines = max((recognize(ocr, base.rotate(deg, expand=True)) for deg in ROTATIONS), key=letter_count)
         entries.append({"file": name, "lines": lines})
+        if len(entries) % 5 == 0:  # partial results stay usable if the run is stopped early
+            write(out_path, entries)
+    write(out_path, entries)
+
+
+def write(out_path, entries):
     with open(out_path, "w", encoding="utf-8") as out:
         json.dump(entries, out, ensure_ascii=False, indent=2)
 
