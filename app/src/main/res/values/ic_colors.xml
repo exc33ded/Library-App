@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_bg_ink">#0F0F10</color>
+    <color name="ic_bg_teal">#121414</color>
+    <color name="ic_bg_forest">#121412</color>
+    <color name="ic_bg_ocean">#121315</color>
+    <color name="ic_bg_berry">#151314</color>
+    <color name="ic_bg_graphite">#131315</color>
+</resources>

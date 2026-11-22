@@ -52,6 +52,11 @@ fun SettingsScreen(onBack: () -> Unit, onOpenModels: () -> Unit, onOpenBackup: (
                 }
             }
             ThemePicker(s, vm::update)
+            SwitchRow("Match app icon to theme", s.iconFollowsTheme) { v -> vm.update { it.copy(iconFollowsTheme = v) } }
+            Text(
+                "The home-screen icon changes colour with your theme. Some launchers take a few seconds to update, or briefly drop a pinned icon.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             SwitchRow("AMOLED black (dark only)", s.amoled) { v -> vm.update { it.copy(amoled = v) } }
 
             Text("Library", style = MaterialTheme.typography.titleMedium)

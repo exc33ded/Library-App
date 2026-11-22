@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Words and Wounds — promo banner</title>
+<style>
+  html, body { margin: 0; width: 1280px; height: 640px; overflow: hidden; }
+  body { font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif; color: #ece8e1; background: var(--bg); position: relative; }
+  .glow { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 80% at 24% 50%, color-mix(in srgb, var(--fg) 26%, transparent), transparent 70%); }
+  .wrap { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 96px; gap: 72px; }
+  .icon { width: 320px; height: 320px; border-radius: 30%; overflow: hidden; background: var(--bg); box-shadow: 0 24px 70px rgba(0,0,0,.55), 0 0 0 2px color-mix(in srgb, var(--fg) 30%, transparent); flex: none; }
+  .icon svg { display: block; width: 100%; height: 100%; }
+  h1 { margin: 0; font-weight: 500; font-size: 92px; line-height: 1.02; letter-spacing: .005em; color: var(--fg); }
+  h1 em { color: var(--accent); font-style: italic; }
+  h1 u { text-decoration: underline dashed var(--accent) 4px; text-underline-offset: .18em; }
+  p { margin: 22px 0 0; font: 400 30px/1.35 system-ui, "Segoe UI", sans-serif; color: #b9b4a9; max-width: 640px; }
+  .dots { margin-top: 34px; display: flex; gap: 14px; }
+  .dots i { width: 44px; height: 44px; border-radius: 30%; display: block; border: 2px solid rgba(255,255,255,.12); }
+</style></head>
+<body>
+<div class="glow"></div>
+<div class="wrap">
+  <div class="icon" id="icon"></div>
+  <div>
+    <h1>Words <em>and</em><br><u>Wounds</u></h1>
+    <p>Your private library, reading goals and book news — all on your phone, no account needed.</p>
+    <div class="dots" id="dots"></div>
+  </div>
+</div>
+<script>
+const T = {
+  ink:{bg:"#0F0F10",fg:"#E0A85A",fg2:"#A8691A",accent:"#E5484D"}, teal:{bg:"#121414",fg:"#53DBCD",fg2:"#1C857A",accent:"#FF7A7A"},
+  forest:{bg:"#121412",fg:"#92D6A3",fg2:"#338748",accent:"#E5484D"}, ocean:{bg:"#121315",fg:"#A9C9F3",fg2:"#2375E0",accent:"#FF8A6B"},
+  berry:{bg:"#151314",fg:"#EBB9D0",fg2:"#C94683",accent:"#FFD27A"}, graphite:{bg:"#131315",fg:"#C3C7CE",fg2:"#6F7788",accent:"#E5484D"},
+};
+const id = (location.hash || "#ink").slice(1); const c = T[id] || T.ink;
+const r = document.documentElement.style; for (const k in c) r.setProperty("--" + k, c[k]);
+const ys=[41.5,49.5,57.5,65.5], st=ys.map(y=>`<path d="M50.6 ${y} L57.4 ${y+4}"/><path d="M57.4 ${y} L50.6 ${y+4}"/>`).join("");
+document.getElementById("icon").innerHTML = `<svg viewBox="0 0 108 108"><rect width="108" height="108" fill="${c.bg}"/>
+<path d="M54 37 C46 32 34 31 26 34 V72 C34 69 46 70 54 75 Z" fill="${c.fg}"/><path d="M54 37 C62 32 74 31 82 34 V72 C74 69 62 70 54 75 Z" fill="${c.fg2}"/>
+<path d="M54 37 V75" stroke="${c.bg}" stroke-width="2.2"/><g stroke="${c.accent}" stroke-width="2.2" stroke-linecap="round" fill="none">${st}</g></svg>`;
+document.getElementById("dots").innerHTML = Object.entries(T).map(([k,v]) => `<i style="background:${v.bg};box-shadow:inset 0 0 0 5px ${v.bg}, inset 0 0 0 100px ${v.bg}"><svg viewBox="0 0 10 10" style="width:100%;height:100%"><circle cx="5" cy="5" r="2.6" fill="${v.fg}"/></svg></i>`).join("");
+</script>
+</body></html>

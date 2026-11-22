@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed (monochrome) icon: two pages with a gap, bridged by the stitches. Only the alpha matters. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#000000" android:pathData="M52.4 37 C45 32 34 31 26 34 V72 C34 69 45 70 52.4 75 Z"/>
+    <path android:fillColor="#000000" android:pathData="M55.6 37 C63 32 74 31 82 34 V72 C74 69 63 70 55.6 75 Z"/>
+    <path android:pathData="M50.6 41.5 L57.4 45.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+    <path android:pathData="M57.4 41.5 L50.6 45.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+    <path android:pathData="M50.6 49.5 L57.4 53.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+    <path android:pathData="M57.4 49.5 L50.6 53.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+    <path android:pathData="M50.6 57.5 L57.4 61.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+    <path android:pathData="M57.4 57.5 L50.6 61.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+    <path android:pathData="M50.6 65.5 L57.4 69.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+    <path android:pathData="M57.4 65.5 L50.6 69.5" android:strokeColor="#000000" android:strokeWidth="2.6" android:strokeLineCap="round"/>
+</vector>

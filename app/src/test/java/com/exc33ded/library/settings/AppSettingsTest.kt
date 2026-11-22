@@ -37,5 +37,6 @@ class AppSettingsTest {
         assertEquals(true, d.wifiOnlyDownloads)
         assertEquals(0L, d.lastExportAt)
         assertEquals(ThemePalette.INK_AMBER, d.palette)
+        assertEquals(true, d.iconFollowsTheme)
     }
 }

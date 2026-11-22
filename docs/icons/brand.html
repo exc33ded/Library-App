@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Words and Wounds — brand &amp; launcher icon</title>
+<style>
+  :root {
+    --bg: #0F0F10; --fg: #E0A85A; --fg2: #A8691A; --accent: #E5484D;
+    --page: #151418; --card: #1d1c21; --text: #ece8e1; --muted: #9a958a; --line: #34323a; --select: #E0A85A; --mask: 30%;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  section { max-width: 1120px; margin: 0 auto; padding: 22px 20px 6px; }
+  h1 { margin: 0; font-size: 1.7rem; } h2 { margin: 0 0 4px; font-size: 1.2rem; } h3 { margin: 0; font-size: 1rem; }
+  p.sub { margin: 0 0 14px; color: var(--muted); }
+  .grid { display: grid; gap: 14px; }
+  .terms { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .marks { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+  .span2 { grid-column: span 2; }
+  @media (max-width: 760px) { .span2 { grid-column: auto; } }
+  .card { background: var(--card); border: 2px solid transparent; border-radius: 20px; padding: 16px; color: inherit; font: inherit; text-align: left; }
+  button.card { cursor: pointer; } button.card:hover { border-color: var(--line); } button.card[aria-pressed="true"] { border-color: var(--select); }
+  .card .k { color: var(--muted); font-size: .85rem; margin-top: 6px; }
+  .stage { display: flex; align-items: center; justify-content: center; border-radius: 14px; padding: 18px; min-height: 130px; }
+  .dark { background: #0F0F10; } .paper { background: #F6F1E8; color: #1C1A16; }
+  .svg svg { display: block; width: 100%; height: 100%; }
+  .icon { overflow: hidden; border-radius: var(--mask); background: var(--bg); display: block; }
+  .icon.nomask { border-radius: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 14px; }
+  .chips span { color: var(--muted); font-size: .85rem; }
+  button.chip { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font: inherit; font-size: .9rem; cursor: pointer; }
+  button.chip[aria-pressed="true"] { background: var(--select); color: #1b1305; border-color: var(--select); font-weight: 600; }
+  .wm { font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif; font-size: 2.1rem; letter-spacing: .01em; white-space: nowrap; }
+  .wm em { font-style: italic; color: var(--accent); padding: 0 .08em; }
+  .wm u { text-decoration: underline dashed var(--accent) 2px; text-underline-offset: .22em; }
+  .lock-h { display: flex; align-items: center; gap: 14px; } .lock-v { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: flex-end; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: .75rem; color: var(--muted); }
+  .tile b { color: var(--text); font-weight: 500; }
+  .examples { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .ex-big { display: flex; justify-content: center; padding: 4px 0 8px; }
+  .phone { width: 290px; height: 560px; border-radius: 38px; border: 8px solid #2b2a31; background: linear-gradient(160deg, var(--wp1, #23304a), var(--wp2, #0b0e17)); padding: 54px 18px 18px; position: relative; margin: 0 auto; }
+  .phone::before { content: ""; position: absolute; top: 14px; left: 50%; width: 84px; height: 20px; margin-left: -42px; border-radius: 12px; background: #0a0a0c; }
+  .apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px 6px; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 10px; color: #e8e8ee; }
+  .ghost { width: 52px; height: 52px; border-radius: var(--mask); }
+  .picked { background: var(--card); border: 1px dashed var(--line); border-radius: 16px; padding: 14px 18px; color: var(--muted); }
+  .picked strong { color: var(--text); }
+  footer { max-width: 1120px; margin: 0 auto; padding: 8px 20px 40px; }
+</style>
+</head>
+<body>
+
+<section>
+  <h1>Words and Wounds — brand &amp; launcher icon</h1>
+  <p class="sub">What Google's “G” is called, and everything we have for the app: the symbol, the name, the home-screen icon and its colour versions.</p>
+  <div class="grid terms">
+    <div class="card"><h3>Logomark</h3><div class="k">The symbol on its own — Google's “G”. Ours: the stitched open book.</div></div>
+    <div class="card"><h3>Wordmark</h3><div class="k">The name written out in a fixed style — Google's lettered “Google”. Ours: “Words <em style="color:var(--accent)">and</em> Wounds”.</div></div>
+    <div class="card"><h3>Lockup</h3><div class="k">Logomark + wordmark arranged together (side by side, or stacked).</div></div>
+    <div class="card"><h3>App icon (launcher icon)</h3><div class="k">The logomark placed on a coloured square that the phone masks to a circle or rounded shape. This is what you tap on the home screen.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Pick a colour theme</h2>
+  <p class="sub">Every example below, the lockups and the home screen use this theme. In the app, the icon follows your chosen theme automatically.</p>
+  <div class="chips" id="themes"><span>Theme</span></div>
+  <div class="chips" id="shapes"><span>Launcher shape</span></div>
+</section>
+
+<section>
+  <h2>Logomark &amp; wordmark</h2>
+  <div class="grid marks">
+    <div class="card"><div class="stage dark"><div class="svg" id="mark-dark" style="width:110px;height:110px"></div></div><div class="k">Logomark on dark</div></div>
+    <div class="card"><div class="stage paper"><div class="svg" id="mark-paper" style="width:110px;height:110px"></div></div><div class="k">Logomark on paper</div></div>
+    <div class="card"><div class="stage dark"><span class="wm" style="color:var(--fg)">Words <em>and</em> <u>Wounds</u></span></div><div class="k">Wordmark (dashed line = the stitch)</div></div>
+    <div class="card span2"><div class="stage paper"><div class="lock-h"><div class="svg" id="lock-h-mark" style="width:70px;height:70px"></div><span class="wm" style="color:#1C1A16;font-size:1.7rem">Words <em>and</em> <u>Wounds</u></span></div></div><div class="k">Horizontal lockup</div></div>
+    <div class="card"><div class="stage dark"><div class="lock-v"><div class="svg" id="lock-v-mark" style="width:84px;height:84px"></div><span class="wm" style="color:var(--fg);font-size:1.6rem">Words <em>and</em> <u>Wounds</u></span></div></div><div class="k">Stacked lockup</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Launcher icon — pick one</h2>
+  <p class="sub">Six takes on the stitched open book. Tap a card to pick it. Shown in your chosen theme and launcher shape, at real sizes.</p>
+  <div class="grid examples" id="examples"></div>
+  <div class="picked" id="picked" style="margin-top:14px">Nothing picked yet. Tell me the letter (A–F) and I will make it the real launcher icon in all theme colours.</div>
+</section>
+
+<section>
+  <h2>Every theme's icon</h2>
+  <p class="sub">The picked design in all six theme colours — what the home-screen icon becomes when you choose that theme.</p>
+  <div class="card"><div class="row" id="all-themes"></div></div>
+</section>
+
+<section>
+  <h2>On a home screen</h2>
+  <p class="sub">How the app looks among other apps, with its name underneath.</p>
+  <div class="phone" id="phone"><div class="apps" id="apps"></div></div>
+</section>
+
+<footer><p class="sub">Source: docs/icons/brand.html. The real Android icons are generated by tools/gen_icons.py from the same shapes and colours.</p></footer>
+
+<script>
+const THEMES = [
+  { id: "ink",      label: "Ink & amber", bg: "#0F0F10", fg: "#E0A85A", fg2: "#A8691A", accent: "#E5484D", wp: ["#2a2230", "#0b0a0e"] },
+  { id: "teal",     label: "Deep teal",   bg: "#121414", fg: "#53DBCD", fg2: "#1C857A", accent: "#FF7A7A", wp: ["#12353a", "#081114"] },
+  { id: "forest",   label: "Forest",      bg: "#121412", fg: "#92D6A3", fg2: "#338748", accent: "#E5484D", wp: ["#17331f", "#0a120c"] },
+  { id: "ocean",    label: "Ocean",       bg: "#121315", fg: "#A9C9F3", fg2: "#2375E0", accent: "#FF8A6B", wp: ["#16294a", "#080d18"] },
+  { id: "berry",    label: "Berry",       bg: "#151314", fg: "#EBB9D0", fg2: "#C94683", accent: "#FFD27A", wp: ["#3a1630", "#12080f"] },
+  { id: "graphite", label: "Graphite",    bg: "#131315", fg: "#C3C7CE", fg2: "#6F7788", accent: "#E5484D", wp: ["#2b2e36", "#0d0e11"] },
+];
+const SHAPES = [{ id: "circle", label: "Circle", r: "50%" }, { id: "squircle", label: "Rounded", r: "30%" }, { id: "square", label: "Square", r: "12%" }];
+const st = { theme: "ink", shape: "squircle", picked: null };
+
+/* The logomark: stitched open book on a 108x108 canvas. Everything important stays inside the central safe zone. */
+const BOOK = (c = {}) => {
+  const ys = [41.5, 49.5, 57.5, 65.5];
+  const stitch = ys.map(y => `<path d="M50.6 ${y} L57.4 ${y + 4}"/><path d="M57.4 ${y} L50.6 ${y + 4}"/>`).join("");
+  return `<path d="M54 37 C46 32 34 31 26 34 V72 C34 69 46 70 54 75 Z" fill="var(--fg)"/>
+    <path d="M54 37 C62 32 74 31 82 34 V72 C74 69 62 70 54 75 Z" fill="var(--fg2)"/>
+    <path d="M54 37 V75" stroke="var(--bg)" stroke-width="2.2"/>
+    <g stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" fill="none">${stitch}</g>`;
+};
+const VARIANTS = [
+  { id: "A", title: "Classic", note: "The book centred on the theme's dark colour. Calm, readable, closest to the in-app look.",
+    svg: () => BOOK() },
+  { id: "B", title: "Big book", note: "Same book, larger so it fills the icon. Best at small sizes.",
+    svg: () => `<g transform="translate(54 54) scale(1.3) translate(-54 -54)">${BOOK()}</g>` },
+  { id: "C", title: "Paper", note: "Light paper background with a dark book. Stands out on dark wallpapers.", paper: true,
+    svg: () => BOOK() },
+  { id: "D", title: "Glow", note: "A soft glow of the theme colour behind the book — a little more depth.",
+    svg: () => `<defs><radialGradient id="glow" cx=".5" cy=".46" r=".55"><stop offset="0" stop-color="var(--fg)" stop-opacity=".30"/><stop offset="1" stop-color="var(--fg)" stop-opacity="0"/></radialGradient></defs>
+      <rect width="108" height="108" fill="url(#glow)"/>${BOOK()}` },
+  { id: "E", title: "Badge", note: "The book inside a soft round badge — friendly, and survives any launcher shape.",
+    svg: () => `<circle cx="54" cy="54" r="39" fill="var(--fg)" opacity=".16"/><g transform="translate(54 54) scale(.86) translate(-54 -54)">${BOOK()}</g>` },
+  { id: "F", title: "Ribbon", note: "The book with a bookmark ribbon hanging from the spine — a memorable extra detail.",
+    svg: () => `<g transform="translate(54 50) scale(1.05) translate(-54 -54)">${BOOK()}<path d="M51.2 74 V92 L54 88.6 L56.8 92 V74 Z" fill="var(--accent)"/></g>` },
+];
+
+const css = (el, t, paper) => {
+  const p = paper ? { bg: "#F6F1E8", fg: "#1C1A16", fg2: "#6F5B3E", accent: "#C0392B" } : t;
+  ["bg", "fg", "fg2", "accent"].forEach(k => el.style.setProperty("--" + k, p[k]));
+};
+const svgWrap = (inner) => `<svg viewBox="0 0 108 108" aria-hidden="true">${inner}</svg>`;
+const iconHtml = (v, px, t) => {
+  const paper = v.paper;
+  const p = paper ? { bg: "#F6F1E8", fg: "#1C1A16", fg2: "#6F5B3E", accent: "#C0392B" } : t;
+  const style = `width:${px}px;height:${px}px;--bg:${p.bg};--fg:${p.fg};--fg2:${p.fg2};--accent:${p.accent}`;
+  return `<span class="icon" style="${style}">${svgWrap(v.svg())}</span>`;
+};
+const theme = () => THEMES.find(x => x.id === st.theme);
+
+function chips() {
+  const th = document.getElementById("themes"); th.querySelectorAll("button").forEach(b => b.remove());
+  THEMES.forEach(t => { const b = document.createElement("button"); b.className = "chip"; b.textContent = t.label; b.setAttribute("aria-pressed", st.theme === t.id); b.onclick = () => { st.theme = t.id; render(); }; th.appendChild(b); });
+  const sh = document.getElementById("shapes"); sh.querySelectorAll("button").forEach(b => b.remove());
+  SHAPES.forEach(s => { const b = document.createElement("button"); b.className = "chip"; b.textContent = s.label; b.setAttribute("aria-pressed", st.shape === s.id); b.onclick = () => { st.shape = s.id; render(); }; sh.appendChild(b); });
+}
+
+function render() {
+  const t = theme(), root = document.documentElement;
+  ["bg", "fg", "fg2", "accent"].forEach(k => root.style.setProperty("--" + k, t[k]));
+  root.style.setProperty("--mask", SHAPES.find(s => s.id === st.shape).r);
+  root.style.setProperty("--select", t.fg);
+  chips();
+  // logomark / lockups (no mask)
+  const bare = (p) => `<span class="icon nomask" style="width:100%;height:100%;background:transparent;--bg:${p.bg};--fg:${p.fg};--fg2:${p.fg2};--accent:${p.accent}">${svgWrap(BOOK())}</span>`;
+  const paperP = { bg: "#F6F1E8", fg: "#1C1A16", fg2: "#6F5B3E", accent: "#C0392B" };
+  document.getElementById("mark-dark").innerHTML = bare(t);
+  document.getElementById("mark-paper").innerHTML = bare(paperP);
+  document.getElementById("lock-h-mark").innerHTML = bare(paperP);
+  document.getElementById("lock-v-mark").innerHTML = bare(t);
+  // examples
+  const ex = document.getElementById("examples"); ex.innerHTML = "";
+  VARIANTS.forEach(v => {
+    const c = document.createElement("button"); c.className = "card"; c.setAttribute("aria-pressed", st.picked === v.id);
+    c.innerHTML = `<div class="ex-big">${iconHtml(v, 150, t)}</div>
+      <div class="row" style="margin:6px 0 8px">
+        <div class="tile">${iconHtml(v, 64, t)}<b>Words and Wounds</b></div>
+        <div class="tile">${iconHtml(v, 44, t)}<span>44</span></div>
+        <div class="tile">${iconHtml(v, 30, t)}<span>30</span></div></div>
+      <h3>${v.id}. ${v.title}</h3><div class="k">${v.note}</div>`;
+    c.onclick = () => { st.picked = v.id; render(); };
+    ex.appendChild(c);
+  });
+  const pv = VARIANTS.find(v => v.id === (st.picked || "A"));
+  document.getElementById("picked").innerHTML = st.picked
+    ? `<strong>Picked: ${pv.id}. ${pv.title}.</strong> Tell me “icon ${pv.id}” and I will make it the real launcher icon in all six theme colours.`
+    : `Nothing picked yet — showing <strong>A. Classic</strong> below. Tell me the letter (A–F) you like.`;
+  // all themes
+  const all = document.getElementById("all-themes"); all.innerHTML = "";
+  THEMES.forEach(x => { const d = document.createElement("div"); d.className = "tile"; d.innerHTML = `${iconHtml(pv, 84, x)}<b>${x.label}</b>`; all.appendChild(d); });
+  // phone
+  const phone = document.getElementById("phone");
+  phone.style.setProperty("--wp1", t.wp[0]); phone.style.setProperty("--wp2", t.wp[1]);
+  const names = ["Maps", "Mail", "Camera", "Clock", "Music", "Photos", "Notes", "Files", "Phone", "Chat", "Browser", "Settings"];
+  const tints = ["#7aa7e0", "#e07a7a", "#5b6470", "#7a8cff", "#e0a14d", "#7ad0a0", "#e8d36a", "#6db4d8", "#6ccf8a", "#5a9be0", "#e08a5a", "#8d8d99"];
+  const apps = document.getElementById("apps"); apps.innerHTML = "";
+  names.forEach((n, i) => {
+    if (i === 5) apps.insertAdjacentHTML("beforeend", `<div class="app">${iconHtml(pv, 52, t)}<span>Words and Wounds</span></div>`);
+    apps.insertAdjacentHTML("beforeend", `<div class="app"><div class="ghost" style="background:${tints[i]}"></div><span>${n}</span></div>`);
+  });
+}
+render();
+</script>
+</body>
+</html>

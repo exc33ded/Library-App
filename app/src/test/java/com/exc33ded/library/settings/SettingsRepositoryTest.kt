@@ -69,4 +69,10 @@ class SettingsRepositoryTest {
         r.update { it.copy(palette = ThemePalette.OCEAN) }
         assertEquals(ThemePalette.OCEAN, r.settings.first().palette)
     }
+
+    @Test fun iconFollowsThemePersists() = runBlocking {
+        val r = repo()
+        r.update { it.copy(iconFollowsTheme = false) }
+        assertEquals(false, r.settings.first().iconFollowsTheme)
+    }
 }

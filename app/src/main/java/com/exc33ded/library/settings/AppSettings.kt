@@ -22,6 +22,7 @@ data class AppSettings(
     val wifiOnlyDownloads: Boolean = true,
     val lastExportAt: Long = 0L,
     val palette: ThemePalette = ThemePalette.INK_AMBER,
+    val iconFollowsTheme: Boolean = true,
 )
 
 fun clampColumns(n: Int): Int = n.coerceIn(MIN_COLUMNS, MAX_COLUMNS)
