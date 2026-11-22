@@ -64,6 +64,7 @@ import com.exc33ded.library.ui.library.LibraryScreen
 import com.exc33ded.library.ui.models.ModelsStorageScreen
 import com.exc33ded.library.ui.profile.ProfileScreen
 import com.exc33ded.library.ui.settings.SettingsScreen
+import com.exc33ded.library.ui.stats.StatsScreen
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -174,7 +175,7 @@ fun AppNav() {
                         )
                     }
                     entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
-                    entry<StatsKey> { PlaceholderScreen("Stats — Phase 5") }
+                    entry<StatsKey> { StatsScreen() }
                     entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }) }
                     entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, onOpenModels = { push(ModelsStorageKey) }) }
                     entry<ModelsStorageKey> { ModelsStorageScreen(onBack = { backStack.removeLastOrNull() }) }
