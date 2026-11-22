@@ -66,6 +66,8 @@ path setting. Constraint to design around: LiteRT-LM needs a real file path, so 
 likely default to app-specific external files dir (`Android/data/<pkg>/files/models`, no permission needed, visible in file managers),
 with free-space check and per-model delete.
 
+(5) **Navigation motion + Profile** (user decisions 2026-11-22): tab switches get a *slide + fade* (direction follows the tab's position in the bar; timings from `MaterialTheme.motionScheme`, per the Phase 7 motion rule); Profile screen holds editable **name + photo** (gallery pick), a **yearly reading goal** with progress ring, a compact **stats summary** card, and a **bio / favourite quote** line, with Settings still reachable from it. Needs its own spec → plan; stored in DataStore/Room (not yet designed).
+
 ## Next steps, in order
 
 1. **User:** confirm/correct `labels.csv` (flagged: #1 envelope "Not a book", Urdu covers #7/#8/#32,
