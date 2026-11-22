@@ -54,6 +54,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.exc33ded.library.metadata.Isbn
+import com.exc33ded.library.ui.backup.BackupScreen
 import com.exc33ded.library.ui.book.BookDetailScreen
 import com.exc33ded.library.ui.book.BookEditScreen
 import com.exc33ded.library.ui.categories.CategoriesScreen
@@ -176,7 +177,8 @@ fun AppNav() {
                     entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
                     entry<StatsKey> { PlaceholderScreen("Stats — Phase 5") }
                     entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }) }
-                    entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, onOpenModels = { push(ModelsStorageKey) }) }
+                    entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, onOpenModels = { push(ModelsStorageKey) }, onOpenBackup = { push(BackupKey) }) }
+                    entry<BackupKey> { BackupScreen(onBack = { backStack.removeLastOrNull() }) }
                     entry<ModelsStorageKey> { ModelsStorageScreen(onBack = { backStack.removeLastOrNull() }) }
                     entry<BookDetailKey> { key ->
                         BookDetailScreen(

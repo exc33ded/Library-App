@@ -15,5 +15,6 @@ import kotlinx.serialization.Serializable
 @Serializable data object ImportKey : NavKey
 @Serializable data object SettingsKey : NavKey
 @Serializable data object ModelsStorageKey : NavKey
+@Serializable data object BackupKey : NavKey
 
 val topLevelKeys: List<NavKey> = listOf(LibraryKey, FeedKey, StatsKey, ProfileKey)
