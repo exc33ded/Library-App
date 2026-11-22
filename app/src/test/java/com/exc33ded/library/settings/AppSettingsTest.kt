@@ -36,5 +36,6 @@ class AppSettingsTest {
         assertEquals(ModelsLocation.PHONE, d.modelsLocation)
         assertEquals(true, d.wifiOnlyDownloads)
         assertEquals(0L, d.lastExportAt)
+        assertEquals(ThemePalette.INK_AMBER, d.palette)
     }
 }

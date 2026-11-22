@@ -29,6 +29,7 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
             p[MODELS_LOC] = n.modelsLocation.name
             p[WIFI_ONLY] = n.wifiOnlyDownloads
             p[LAST_EXPORT] = n.lastExportAt
+            p[PALETTE] = n.palette.name
         }
     }
 
@@ -45,6 +46,7 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
             modelsLocation = p[MODELS_LOC]?.let { runCatching { ModelsLocation.valueOf(it) }.getOrNull() } ?: d.modelsLocation,
             wifiOnlyDownloads = p[WIFI_ONLY] ?: d.wifiOnlyDownloads,
             lastExportAt = p[LAST_EXPORT] ?: d.lastExportAt,
+            palette = p[PALETTE]?.let { runCatching { ThemePalette.valueOf(it) }.getOrNull() } ?: d.palette,
         )
     }
 
@@ -59,5 +61,6 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
         val MODELS_LOC = stringPreferencesKey("models_location")
         val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
         val LAST_EXPORT = longPreferencesKey("last_export_at")
+        val PALETTE = stringPreferencesKey("palette")
     }
 }

@@ -63,4 +63,10 @@ class SettingsRepositoryTest {
         assertEquals(ModelsLocation.SD_CARD, s.modelsLocation)
         assertEquals(false, s.wifiOnlyDownloads)
     }
+
+    @Test fun palettePersists() = runBlocking {
+        val r = repo()
+        r.update { it.copy(palette = ThemePalette.OCEAN) }
+        assertEquals(ThemePalette.OCEAN, r.settings.first().palette)
+    }
 }

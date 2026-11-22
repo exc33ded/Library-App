@@ -51,7 +51,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenModels: () -> Unit, onOpenBackup: (
                     ) { Text(m.name.lowercase().replaceFirstChar { it.uppercase() }) }
                 }
             }
-            SwitchRow("Dynamic colors (wallpaper)", s.dynamicColor) { v -> vm.update { it.copy(dynamicColor = v) } }
+            ThemePicker(s, vm::update)
             SwitchRow("AMOLED black (dark only)", s.amoled) { v -> vm.update { it.copy(amoled = v) } }
 
             Text("Library", style = MaterialTheme.typography.titleMedium)
