@@ -4,6 +4,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -83,8 +87,10 @@ fun AppNav() {
     var tabDirection by remember { mutableIntStateOf(0) }
     var addMenuOpen by remember { mutableStateOf(false) }
     fun push(key: NavKey) { tabDirection = 0; backStack.add(key) }
-    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
-    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+    // Lightweight shared-axis transitions: short tweens (no long spring tails) and small offsets keep low-end phones smooth.
+    val moveSpec = tween<IntOffset>(durationMillis = 220, easing = FastOutSlowInEasing)
+    val fadeInSpec = tween<Float>(durationMillis = 180, delayMillis = 40, easing = LinearOutSlowInEasing)
+    val fadeOutSpec = tween<Float>(durationMillis = 90, easing = FastOutLinearInEasing)
     val top = backStack.lastOrNull()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -158,15 +164,19 @@ fun AppNav() {
                 transitionSpec = {
                     val d = tabDirection
                     if (d == 0) {
-                        // ordinary push: standard horizontal slide
-                        slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                        // push: new screen eases in from the right a quarter of the width while fading in
+                        (slideInHorizontally(moveSpec) { it / 4 } + fadeIn(fadeInSpec)) togetherWith
+                            (slideOutHorizontally(moveSpec) { -it / 8 } + fadeOut(fadeOutSpec))
                     } else {
-                        // tab switch: a nudge toward the direction of travel plus a fade; timing from the Expressive motion scheme
-                        (slideInHorizontally(spatial) { d * it / 3 } + fadeIn(effects)) togetherWith
-                            (slideOutHorizontally(spatial) { -d * it / 3 } + fadeOut(effects))
+                        // tab switch: a small nudge toward the direction of travel plus a fade
+                        (slideInHorizontally(moveSpec) { d * it / 10 } + fadeIn(fadeInSpec)) togetherWith
+                            (slideOutHorizontally(moveSpec) { -d * it / 10 } + fadeOut(fadeOutSpec))
                     }
                 },
-                popTransitionSpec = { slideInHorizontally { -it } togetherWith slideOutHorizontally { it } },
+                popTransitionSpec = {
+                    (slideInHorizontally(moveSpec) { -it / 8 } + fadeIn(fadeInSpec)) togetherWith
+                        (slideOutHorizontally(moveSpec) { it / 4 } + fadeOut(fadeOutSpec))
+                },
                 entryProvider = entryProvider {
                     entry<LibraryKey> {
                         LibraryScreen(

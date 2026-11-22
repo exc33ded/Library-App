@@ -1,0 +1,16 @@
+# Baseline profile (hand-written, wildcard form). Tells ART to pre-compile the hot paths of Compose, navigation and this
+# app at install time, which removes most first-use jank on budget phones. Regenerate with a Macrobenchmark later if wanted.
+HSPLandroidx/compose/**;->**(**)**
+HSPLandroidx/navigation3/**;->**(**)**
+HSPLandroidx/lifecycle/**;->**(**)**
+HSPLandroidx/activity/**;->**(**)**
+HSPLandroidx/room/**;->**(**)**
+HSPLandroidx/datastore/**;->**(**)**
+HSPLcoil3/**;->**(**)**
+HSPLcom/exc33ded/library/**;->**(**)**
+Landroidx/compose/**;
+Landroidx/navigation3/**;
+Landroidx/lifecycle/**;
+Landroidx/room/**;
+Lcoil3/**;
+Lcom/exc33ded/library/**;

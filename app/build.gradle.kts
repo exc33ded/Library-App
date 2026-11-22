@@ -25,6 +25,16 @@ android {
         versionName = "0.1.0"
         buildConfigField("String", "GOOGLE_BOOKS_KEY", "\"${localProps.getProperty("googleBooksKey", "")}\"")
     }
+    buildTypes {
+        release {
+            // Optimised build: R8 shrinks/optimises code and drops debug-only Compose overhead (much smoother on budget phones).
+            // Signed with the debug key on purpose: personal app, and it installs over the existing debug install keeping its data.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
