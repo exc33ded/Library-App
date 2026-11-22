@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Insights
@@ -24,10 +23,7 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -82,6 +78,7 @@ fun AppNav() {
     val backStack = rememberNavBackStack(LibraryKey)
     // -1 / +1 while a tab switch is animating (direction of travel), 0 for ordinary pushes.
     var tabDirection by remember { mutableIntStateOf(0) }
+    var addMenuOpen by remember { mutableStateOf(false) }
     fun push(key: NavKey) { tabDirection = 0; backStack.add(key) }
     val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
     val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
@@ -121,6 +118,13 @@ fun AppNav() {
         cameraFile = f
         takePhoto.launch(FileProvider.getUriForFile(context, "${context.packageName}.files", f))
     }
+    val addActions = listOf(
+        AddAction(Icons.Filled.PhotoCamera, "Photo of cover") { addMenuOpen = false; launchCamera() },
+        AddAction(Icons.Filled.PhotoLibrary, "Import from gallery") { addMenuOpen = false; pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+        AddAction(Icons.Filled.QrCodeScanner, "Scan ISBN") { addMenuOpen = false; scanIsbn() },
+        AddAction(Icons.Filled.Search, "Search online") { addMenuOpen = false; push(FindBookKey()) },
+        AddAction(Icons.Filled.Edit, "Enter manually") { addMenuOpen = false; push(BookEditKey()) },
+    )
     Scaffold(
         // Inner screens own their top insets (TopAppBar / statusBarsPadding); avoids a double status-bar gap.
         contentWindowInsets = WindowInsets(0),
@@ -130,83 +134,83 @@ fun AppNav() {
                 BottomBar(
                     current = top,
                     onSelect = { key ->
+                        addMenuOpen = false
                         tabDirection = Integer.signum(topLevelKeys.indexOf(key) - topLevelKeys.indexOf(top))
                         backStack.switchTo(key)
                     },
-                    onScan = { scanIsbn() },
-                    onSearch = { push(FindBookKey()) },
-                    onManual = { push(BookEditKey()) },
-                    onPhoto = { launchCamera() },
-                    onGallery = { pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    menuOpen = addMenuOpen,
+                    onMenuToggle = { addMenuOpen = !addMenuOpen },
                 )
             }
         },
     ) { padding ->
-        NavDisplay(
-            backStack = backStack,
-            onBack = { backStack.removeLastOrNull() },
-            modifier = Modifier.padding(padding),
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator(),
-            ),
-            transitionSpec = {
-                val d = tabDirection
-                if (d == 0) {
-                    // ordinary push: standard horizontal slide
-                    slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
-                } else {
-                    // tab switch: a nudge toward the direction of travel plus a fade; timing from the Expressive motion scheme
-                    (slideInHorizontally(spatial) { d * it / 3 } + fadeIn(effects)) togetherWith
-                        (slideOutHorizontally(spatial) { -d * it / 3 } + fadeOut(effects))
-                }
-            },
-            popTransitionSpec = { slideInHorizontally { -it } togetherWith slideOutHorizontally { it } },
-            entryProvider = entryProvider {
-                entry<LibraryKey> {
-                    LibraryScreen(
-                        onOpenBook = { id -> push(BookDetailKey(id)) },
-                        onManageCategories = { push(CategoriesKey) },
-                        onOpenImports = { push(ImportKey) },
-                        onScanIsbn = { scanIsbn() },
-                    )
-                }
-                entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
-                entry<StatsKey> { PlaceholderScreen("Stats — Phase 5") }
-                entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }) }
-                entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, onOpenModels = { push(ModelsStorageKey) }) }
-                entry<ModelsStorageKey> { ModelsStorageScreen(onBack = { backStack.removeLastOrNull() }) }
-                entry<BookDetailKey> { key ->
-                    BookDetailScreen(
-                        bookId = key.id,
-                        onBack = { backStack.removeLastOrNull() },
-                        onEdit = { push(BookEditKey(key.id)) },
-                    )
-                }
-                entry<BookEditKey> { key ->
-                    BookEditScreen(bookId = key.id, prefill = key.prefill, importId = key.importId, onDone = { backStack.removeLastOrNull() })
-                }
-                entry<FindBookKey> { key ->
-                    FindBookScreen(
-                        isbn = key.isbn,
-                        query = key.query,
-                        onBack = { backStack.removeLastOrNull() },
-                        onPicked = { c ->
-                            backStack.removeLastOrNull() // replace Find with Edit so Back returns to the library
-                            push(BookEditKey(prefill = c, importId = key.importId))
-                        },
-                    )
-                }
-                entry<CategoriesKey> { CategoriesScreen(onBack = { backStack.removeLastOrNull() }) }
-                entry<ImportKey> {
-                    ImportScreen(
-                        onBack = { backStack.removeLastOrNull() },
-                        onEdit = { id, c -> push(BookEditKey(prefill = c, importId = id)) },
-                        onSearch = { id, q -> push(FindBookKey(query = q, importId = id)) },
-                    )
-                }
-            },
-        )
+        Box(Modifier.padding(padding)) {
+            NavDisplay(
+                backStack = backStack,
+                onBack = { backStack.removeLastOrNull() },
+                entryDecorators = listOf(
+                    rememberSaveableStateHolderNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator(),
+                ),
+                transitionSpec = {
+                    val d = tabDirection
+                    if (d == 0) {
+                        // ordinary push: standard horizontal slide
+                        slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                    } else {
+                        // tab switch: a nudge toward the direction of travel plus a fade; timing from the Expressive motion scheme
+                        (slideInHorizontally(spatial) { d * it / 3 } + fadeIn(effects)) togetherWith
+                            (slideOutHorizontally(spatial) { -d * it / 3 } + fadeOut(effects))
+                    }
+                },
+                popTransitionSpec = { slideInHorizontally { -it } togetherWith slideOutHorizontally { it } },
+                entryProvider = entryProvider {
+                    entry<LibraryKey> {
+                        LibraryScreen(
+                            onOpenBook = { id -> push(BookDetailKey(id)) },
+                            onManageCategories = { push(CategoriesKey) },
+                            onOpenImports = { push(ImportKey) },
+                            onScanIsbn = { scanIsbn() },
+                        )
+                    }
+                    entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
+                    entry<StatsKey> { PlaceholderScreen("Stats — Phase 5") }
+                    entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }) }
+                    entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, onOpenModels = { push(ModelsStorageKey) }) }
+                    entry<ModelsStorageKey> { ModelsStorageScreen(onBack = { backStack.removeLastOrNull() }) }
+                    entry<BookDetailKey> { key ->
+                        BookDetailScreen(
+                            bookId = key.id,
+                            onBack = { backStack.removeLastOrNull() },
+                            onEdit = { push(BookEditKey(key.id)) },
+                        )
+                    }
+                    entry<BookEditKey> { key ->
+                        BookEditScreen(bookId = key.id, prefill = key.prefill, importId = key.importId, onDone = { backStack.removeLastOrNull() })
+                    }
+                    entry<FindBookKey> { key ->
+                        FindBookScreen(
+                            isbn = key.isbn,
+                            query = key.query,
+                            onBack = { backStack.removeLastOrNull() },
+                            onPicked = { c ->
+                                backStack.removeLastOrNull() // replace Find with Edit so Back returns to the library
+                                push(BookEditKey(prefill = c, importId = key.importId))
+                            },
+                        )
+                    }
+                    entry<CategoriesKey> { CategoriesScreen(onBack = { backStack.removeLastOrNull() }) }
+                    entry<ImportKey> {
+                        ImportScreen(
+                            onBack = { backStack.removeLastOrNull() },
+                            onEdit = { id, c -> push(BookEditKey(prefill = c, importId = id)) },
+                            onSearch = { id, q -> push(FindBookKey(query = q, importId = id)) },
+                        )
+                    }
+                },
+            )
+            AddMenuOverlay(visible = addMenuOpen && top in topLevelKeys, actions = addActions, onDismiss = { addMenuOpen = false })
+        }
     }
 }
 
@@ -220,32 +224,13 @@ private fun NavBackStack<NavKey>.switchTo(key: NavKey) {
 private fun BottomBar(
     current: NavKey?,
     onSelect: (NavKey) -> Unit,
-    onScan: () -> Unit,
-    onSearch: () -> Unit,
-    onManual: () -> Unit,
-    onPhoto: () -> Unit,
-    onGallery: () -> Unit,
+    menuOpen: Boolean,
+    onMenuToggle: () -> Unit,
 ) {
-    var menu by remember { mutableStateOf(false) }
     NavigationBar {
         Tab(current, LibraryKey, Icons.Filled.AutoStories, "Library", onSelect)
         Tab(current, FeedKey, Icons.Filled.RssFeed, "Feed", onSelect)
-        // ponytail: plain FAB + DropdownMenu; Phase 7 swaps in the Expressive FAB menu and cookie shape.
-        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            FloatingActionButton(onClick = { menu = true }) { Icon(Icons.Filled.Add, contentDescription = "Add book") }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                DropdownMenuItem(text = { Text("Photo of cover") }, leadingIcon = { Icon(Icons.Filled.PhotoCamera, null) },
-                    onClick = { menu = false; onPhoto() })
-                DropdownMenuItem(text = { Text("Import from gallery") }, leadingIcon = { Icon(Icons.Filled.PhotoLibrary, null) },
-                    onClick = { menu = false; onGallery() })
-                DropdownMenuItem(text = { Text("Scan ISBN") }, leadingIcon = { Icon(Icons.Filled.QrCodeScanner, null) },
-                    onClick = { menu = false; onScan() })
-                DropdownMenuItem(text = { Text("Search") }, leadingIcon = { Icon(Icons.Filled.Search, null) },
-                    onClick = { menu = false; onSearch() })
-                DropdownMenuItem(text = { Text("Enter manually") }, leadingIcon = { Icon(Icons.Filled.Edit, null) },
-                    onClick = { menu = false; onManual() })
-            }
-        }
+        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { AddToggleButton(menuOpen, onMenuToggle) }
         Tab(current, StatsKey, Icons.Filled.Insights, "Stats", onSelect)
         Tab(current, ProfileKey, Icons.Filled.Person, "Profile", onSelect)
     }
