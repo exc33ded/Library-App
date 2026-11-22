@@ -528,9 +528,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(private val repo: SettingsRepository) : ViewModel() {
-    val settings: StateFlow<AppSettings> =
-        repo.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
-
+    // Display values come from LocalAppSettings (Task 3); this ViewModel only writes.
     fun update(transform: (AppSettings) -> AppSettings) {
         viewModelScope.launch { repo.update(transform) }
     }
