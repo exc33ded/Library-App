@@ -1,5 +1,6 @@
 package com.exc33ded.library.ui.book
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.exc33ded.library.data.BookRepository
@@ -19,6 +20,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class CoverMode { KEEP, PICKED, REMOVED }
+
 data class EditUiState(
     val form: BookForm = BookForm(),
     val categories: List<CategoryEntity> = emptyList(),
@@ -26,9 +29,11 @@ data class EditUiState(
     /** Category names suggested from subjects that the user hasn't added yet. */
     val suggestions: List<String> = emptyList(),
     val coverPreview: String? = null,
+    val coverMode: CoverMode = CoverMode.KEEP,
     val saving: Boolean = false,
     val error: FormError? = null,
     val savedId: String? = null,
+    val saved: Boolean = false,
 )
 
 @HiltViewModel(assistedFactory = BookEditViewModel.Factory::class)
@@ -100,20 +105,44 @@ class BookEditViewModel @AssistedInject constructor(
         viewModelScope.launch { toggleCategory(repo.saveCategory(name)) }
     }
 
+    fun setCoverFromUri(uri: Uri) {
+        viewModelScope.launch {
+            val path = covers.saveFromUri(uri, original.id) ?: return@launch
+            _state.update { it.copy(coverPreview = path, coverMode = CoverMode.PICKED) }
+        }
+    }
+
+    fun removeCover() = _state.update { it.copy(coverPreview = null, coverMode = CoverMode.REMOVED) }
+
+    fun useOnlineCover() {
+        val url = prefill?.coverUrl ?: return
+        _state.update { it.copy(coverPreview = url, coverMode = CoverMode.KEEP) }
+    }
+
+    override fun onCleared() {
+        covers.clearPending(original.id) // no-op after a successful save; discards an abandoned pick
+    }
+
     fun save() {
         val s = _state.value
         if (s.saving) return
         s.form.validate()?.let { e -> _state.update { it.copy(error = e) }; return }
         _state.update { it.copy(saving = true) }
         viewModelScope.launch {
-            val remote = s.coverPreview?.takeIf { it.startsWith("http") }
-            val photo = importId?.let { imports.get(it)?.photoPath }
-            val coverPath = remote?.let { covers.download(it, original.id) }
-                ?: photo?.let { covers.copyLocal(it, original.id) }
-                ?: original.coverPath
+            val coverPath = when (s.coverMode) {
+                CoverMode.PICKED -> covers.commitPending(original.id) ?: original.coverPath
+                CoverMode.REMOVED -> { covers.delete(original.id); null }
+                CoverMode.KEEP -> {
+                    val remote = s.coverPreview?.takeIf { it.startsWith("http") }
+                    val photo = importId?.let { imports.get(it)?.photoPath }
+                    remote?.let { covers.download(it, original.id) }
+                        ?: photo?.let { covers.copyLocal(it, original.id) }
+                        ?: original.coverPath
+                }
+            }
             val id = repo.saveBook(s.form.applyTo(original).copy(coverPath = coverPath), s.selectedCategories)
             importId?.let { imports.markDone(it) }
-            _state.update { it.copy(savedId = id, saving = false) }
+            _state.update { it.copy(savedId = id, saving = false, saved = true) }
         }
     }
 }
