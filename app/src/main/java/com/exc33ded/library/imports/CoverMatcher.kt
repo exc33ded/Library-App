@@ -9,9 +9,13 @@ data class CoverMatch(val candidate: BookCandidate, val query: String, val score
  * Tries each query variant, ranks the results against the OCR text and returns the first confident one.
  * If none is confident, returns the best-scoring candidate seen across all variants (the review screen
  * lets the user correct it). Lookup errors propagate to the caller.
+ * A valid ISBN found in the OCR text is looked up first.
  */
 class CoverMatcher(private val lookup: MetadataLookup) {
     suspend fun match(lines: List<OcrLine>): CoverMatch? {
+        extractIsbn(lines)?.let { isbn ->
+            lookup.lookupIsbn(isbn)?.let { return CoverMatch(it, "isbn:$isbn", 1.0) }
+        }
         var best: CoverMatch? = null
         for (q in buildQueries(lines)) {
             val top = lookup.search(q).map { CoverMatch(it, q, scoreCandidate(lines, it)) }.maxByOrNull { it.score } ?: continue

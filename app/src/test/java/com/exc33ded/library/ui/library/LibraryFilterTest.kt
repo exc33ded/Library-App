@@ -29,4 +29,10 @@ class LibraryFilterTest {
     @Test fun filtersCombine() =
         assertEquals(emptyList<BookEntity>(),
             filterBooks(all, links, LibraryFilter(status = ReadingStatus.READING, categoryId = "scifi")))
+
+    @Test fun queryMatchesNotes() {
+        val annotated = yf.copy(notes = "borrowed from the dragon library")
+        assertEquals(listOf(annotated),
+            filterBooks(listOf(annotated, dune), links, LibraryFilter(query = "dragon")))
+    }
 }
