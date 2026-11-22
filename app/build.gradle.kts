@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.coil.network.ktor3)
     implementation(libs.play.services.code.scanner)
     implementation(libs.kotlinx.coroutines.play.services)
