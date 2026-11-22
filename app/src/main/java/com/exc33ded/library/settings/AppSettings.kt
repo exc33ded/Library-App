@@ -3,6 +3,8 @@ package com.exc33ded.library.settings
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 enum class LibraryDisplayMode { OVERLAY_GRID, CAPTION_GRID, LIST }
 
+enum class ThemePalette { INK_AMBER, DEEP_TEAL, FOREST, OCEAN, BERRY, GRAPHITE }
+
 enum class ModelsLocation { PHONE, APP_FOLDER, SD_CARD }
 
 const val MIN_COLUMNS = 2
@@ -19,6 +21,7 @@ data class AppSettings(
     val modelsLocation: ModelsLocation = ModelsLocation.PHONE,
     val wifiOnlyDownloads: Boolean = true,
     val lastExportAt: Long = 0L,
+    val palette: ThemePalette = ThemePalette.INK_AMBER,
 )
 
 fun clampColumns(n: Int): Int = n.coerceIn(MIN_COLUMNS, MAX_COLUMNS)

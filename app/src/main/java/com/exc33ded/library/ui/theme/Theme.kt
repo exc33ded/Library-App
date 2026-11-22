@@ -29,8 +29,7 @@ fun LibraryTheme(settings: AppSettings, content: @Composable () -> Unit) {
     val dark = isDark(settings.themeMode, isSystemInDarkTheme())
     var colors = when {
         settings.dynamicColor -> if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
-        dark -> InkDark
-        else -> InkLight
+        else -> paletteScheme(settings.palette, dark)
     }
     if (dark && settings.amoled) {
         colors = colors.copy(background = Color.Black, surface = Color.Black, surfaceContainerLowest = Color.Black)
