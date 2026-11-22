@@ -5,5 +5,8 @@
         <receiver
             android:name=".debug.ImportDirReceiver"
             android:exported="true" />
+        <receiver
+            android:name=".debug.OcrDumpReceiver"
+            android:exported="true" />
     </application>
 </manifest>
