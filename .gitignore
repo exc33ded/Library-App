@@ -20,3 +20,5 @@ secrets.properties
 docs/Books-Photo/
 graft/
 .ignore
+
+.superpowers/
