@@ -29,16 +29,14 @@ class OcrDumpReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val deps = EntryPointAccessors.fromApplication(context.applicationContext, Deps::class.java)
         val files = File(context.filesDir, "bench").listFiles { f -> f.extension.equals("jpg", true) }?.sortedBy { it.name }.orEmpty()
-        val pending = goAsync()
+        // No goAsync(): holding the broadcast for minutes causes an ANR. Keep the app in the foreground while this runs.
         CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val dumps = files.map { f ->
-                    val prepared = deps.prep().prepare(f.absolutePath, "ocrdump-${f.nameWithoutExtension}")
-                    OcrDump(f.name, deps.reader().read(prepared))
-                }
-                File(context.filesDir, "ocr_mlkit.json").writeText(Json.encodeToString(dumps))
-                File(context.filesDir, "ocr_mlkit.done").writeText(dumps.size.toString())
-            } finally { pending.finish() }
+            val dumps = files.map { f ->
+                val prepared = deps.prep().prepare(f.absolutePath, "ocrdump-${f.nameWithoutExtension}")
+                OcrDump(f.name, deps.reader().read(prepared))
+            }
+            File(context.filesDir, "ocr_mlkit.json").writeText(Json.encodeToString(dumps))
+            File(context.filesDir, "ocr_mlkit.done").writeText(dumps.size.toString())
         }
     }
 }
