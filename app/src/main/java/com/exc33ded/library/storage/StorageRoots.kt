@@ -1,7 +1,11 @@
 package com.exc33ded.library.storage
 
+import android.content.Context
 import com.exc33ded.library.settings.ModelsLocation
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * [externalDirs] = Context.getExternalFilesDirs(null): index 0 is the app folder on shared storage,
@@ -15,3 +19,11 @@ fun resolveModelsDir(location: ModelsLocation, filesDir: File, externalDirs: Lis
 
 fun availableLocations(filesDir: File, externalDirs: List<File?>): List<ModelsLocation> =
     ModelsLocation.entries.filter { resolveModelsDir(it, filesDir, externalDirs) != null }
+
+@Singleton
+class StorageRoots @Inject constructor(@ApplicationContext private val ctx: Context) {
+    private fun externals(): List<File?> = ctx.getExternalFilesDirs(null).toList()
+    fun modelsDir(location: ModelsLocation): File? = resolveModelsDir(location, ctx.filesDir, externals())
+    fun available(): List<ModelsLocation> = availableLocations(ctx.filesDir, externals())
+    fun freeBytes(dir: File): Long { dir.mkdirs(); return dir.usableSpace }
+}
