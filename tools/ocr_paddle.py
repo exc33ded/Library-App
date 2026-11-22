@@ -9,7 +9,7 @@ from paddleocr import PaddleOCR
 MAX_EDGE = 1600
 ROTATIONS = (0, 90, 270)
 UPRIGHT_ENOUGH = 15  # letters; below this the photo may be sideways, so also try 90/270
-DET_SIDE = 960  # detection runs on a 960px max side: ~3x faster than 1600 and enough for cover titles
+DET_SIDE = 1600  # keep detection at full prep size: 960 was ~3x faster but made recognition much worse (YELLOWFACE -> YELLLLAGE)
 
 
 def make_ocr():
