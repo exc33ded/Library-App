@@ -27,6 +27,13 @@ interface ImportDao {
     @Query("UPDATE import_queue SET state = 'DONE' WHERE id = :id")
     suspend fun markDone(id: String)
 
+    /** Dismissing only touches finished-looking rows; PENDING/PROCESSING belong to the running worker. */
+    @Query("UPDATE import_queue SET state = 'DONE' WHERE state = 'FAILED'")
+    suspend fun dismissFailed()
+
+    @Query("UPDATE import_queue SET state = 'DONE' WHERE state IN ('REVIEW', 'FAILED')")
+    suspend fun dismissReviewable()
+
     @Query("DELETE FROM import_queue WHERE state = 'DONE'")
     suspend fun clearDone()
 }

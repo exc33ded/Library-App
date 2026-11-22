@@ -12,6 +12,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -26,6 +28,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,6 +51,9 @@ fun ImportScreen(
 ) {
     val rows by vm.rows.collectAsStateWithLifecycle()
     val waiting = rows.count { it.item.state == ImportState.PENDING || it.item.state == ImportState.PROCESSING }
+    val failed = rows.count { it.item.state == ImportState.FAILED }
+    val reviewable = rows.count { it.item.state == ImportState.REVIEW || it.item.state == ImportState.FAILED }
+    var confirmAll by remember { mutableStateOf(false) }
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(if (waiting > 0) "Reading covers… $waiting left" else "Review imports") },
@@ -62,6 +70,12 @@ fun ImportScreen(
             Modifier.fillMaxSize().padding(pad).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (reviewable > 0) item(key = "bulk-actions") {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (failed > 0) AssistChip(onClick = { vm.dismissFailed() }, label = { Text("Dismiss failed ($failed)") })
+                    AssistChip(onClick = { confirmAll = true }, label = { Text("Dismiss all ($reviewable)") })
+                }
+            }
             items(rows, key = { it.item.id }) { row ->
                 ElevatedCard(Modifier.fillMaxWidth().animateItem()) {
                     Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -83,7 +97,10 @@ fun ImportScreen(
                                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                         Button({ vm.add(row) }) { Text("Add") }
                                         OutlinedButton({ onEdit(row.item.id, c) }) { Text("Edit") }
-                                        TextButton({ onSearch(row.item.id, row.item.query) }) { Text("Wrong book") }
+                                    }
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        TextButton({ onSearch(row.item.id, row.item.query) }) { Text("Wrong book? Search") }
+                                        TextButton({ vm.skip(row.item.id) }) { Text("Dismiss") }
                                     }
                                 }
                                 ImportState.FAILED -> {
@@ -102,4 +119,11 @@ fun ImportScreen(
             }
         }
     }
+    if (confirmAll) AlertDialog(
+        onDismissRequest = { confirmAll = false },
+        title = { Text("Dismiss all $reviewable?") },
+        text = { Text("Books you haven't added will be removed from this list. Your photos stay in your gallery.") },
+        confirmButton = { TextButton({ vm.dismissAll(); confirmAll = false }) { Text("Dismiss all") } },
+        dismissButton = { TextButton({ confirmAll = false }) { Text("Cancel") } },
+    )
 }

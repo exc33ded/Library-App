@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Words and Wounds — app icon concepts</title>
+<style>
+  :root {
+    --bg: #0F0F10; --fg: #E0A85A; --fg2: #A8691A; --accent: #E5484D;
+    --page: #17161a; --card: #1f1e23; --text: #ece8e1; --muted: #9a958a; --line: #34323a; --select: #E0A85A;
+    --mask: 50%;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--text); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 28px 20px 8px; max-width: 1100px; margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 1.6rem; letter-spacing: .01em; }
+  header p { margin: 0; color: var(--muted); }
+  .controls { max-width: 1100px; margin: 0 auto; padding: 14px 20px 6px; display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; }
+  .group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .group > span { color: var(--muted); font-size: .85rem; margin-right: 2px; }
+  button.chip { background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font: inherit; font-size: .9rem; cursor: pointer; }
+  button.chip[aria-pressed="true"] { background: var(--select); color: #1b1305; border-color: var(--select); font-weight: 600; }
+  main { max-width: 1100px; margin: 0 auto; padding: 10px 20px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 2px solid transparent; border-radius: 22px; padding: 18px; cursor: pointer; text-align: left; color: inherit; font: inherit; }
+  .card:hover { border-color: var(--line); }
+  .card[aria-pressed="true"] { border-color: var(--select); }
+  .card h2 { margin: 12px 0 2px; font-size: 1.05rem; }
+  .card p { margin: 0; color: var(--muted); font-size: .88rem; }
+  .big { display: flex; justify-content: center; padding: 6px 0; }
+  .icon { overflow: hidden; border-radius: var(--mask); background: var(--bg); display: block; }
+  .icon svg { display: block; width: 100%; height: 100%; }
+  .sizes { display: flex; align-items: flex-end; justify-content: center; gap: 18px; margin-top: 10px; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .72rem; color: var(--muted); }
+  .tile b { color: var(--text); font-weight: 500; max-width: 76px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .picked { max-width: 1100px; margin: 0 auto; padding: 0 20px 36px; }
+  .picked div { background: var(--card); border: 1px dashed var(--line); border-radius: 16px; padding: 14px 18px; color: var(--muted); }
+  .picked strong { color: var(--text); }
+  @media (max-width: 420px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Words and Wounds — app icon concepts</h1>
+  <p>Six ideas for the launcher icon. Switch palette and shape, tap a card to pick one. Every icon keeps its artwork inside the centre safe zone, so it survives any phone's circle or squircle mask.</p>
+</header>
+
+<div class="controls">
+  <div class="group" id="palettes"><span>Palette</span></div>
+  <div class="group" id="shapes"><span>Launcher shape</span></div>
+</div>
+
+<main id="grid"></main>
+
+<div class="picked"><div id="picked">Nothing picked yet. Tell me the concept number and palette and I will turn it into the real Android adaptive icon (foreground + background layers and a monochrome version for themed icons) and rename the app to “Words and Wounds”.</div></div>
+
+<script>
+const NAME = "Words and Wounds";
+
+/* All artwork is drawn on a 108x108 canvas (Android adaptive icon). Keep the important part inside the central 66x66. */
+const concepts = [
+  { id: 1, title: "Stitched open book", note: "An open book whose spine is sutured shut: the words and the wound in one shape.",
+    art: `
+      <path d="M54 37 C46 32 34 31 26 34 V72 C34 69 46 70 54 75 Z" fill="var(--fg)"/>
+      <path d="M54 37 C62 32 74 31 82 34 V72 C74 69 62 70 54 75 Z" fill="var(--fg2)"/>
+      <path d="M54 37 V75" stroke="var(--bg)" stroke-width="2.2"/>
+      <g stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round">
+        <path d="M50.6 41.5 L57.4 45.5"/><path d="M57.4 41.5 L50.6 45.5"/>
+        <path d="M50.6 49.5 L57.4 53.5"/><path d="M57.4 49.5 L50.6 53.5"/>
+        <path d="M50.6 57.5 L57.4 61.5"/><path d="M57.4 57.5 L50.6 61.5"/>
+        <path d="M50.6 65.5 L57.4 69.5"/><path d="M57.4 65.5 L50.6 69.5"/>
+      </g>` },
+  { id: 2, title: "Bandaged W", note: "A bold W — the first letter of both words — with a bandage across its middle peak.",
+    art: `
+      <path d="M29 35 L40 74 L54 46 L68 74 L79 35" fill="none" stroke="var(--fg)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+      <g transform="rotate(-38 54 47)">
+        <rect x="38" y="40.5" width="32" height="13" rx="6.5" fill="var(--bg)"/>
+        <rect x="40" y="42.5" width="28" height="9" rx="4.5" fill="var(--accent)"/>
+        <rect x="49" y="42.5" width="10" height="9" fill="var(--fg)" opacity=".35"/>
+        <circle cx="52" cy="47" r=".9" fill="var(--bg)"/><circle cx="56" cy="47" r=".9" fill="var(--bg)"/>
+      </g>` },
+  { id: 3, title: "Bookmark & drop", note: "A bookmark ribbon marking your place, with one drop where it was cut.",
+    art: `
+      <path d="M38 26 H70 V82 L54 69 L38 82 Z" fill="var(--fg)"/>
+      <path d="M38 26 H46 V75 L38 82 Z" fill="var(--fg2)" opacity=".55"/>
+      <path d="M54 38 C54 38 45.5 48 45.5 53.5 A8.5 8.5 0 0 0 62.5 53.5 C62.5 48 54 38 54 38 Z" fill="var(--accent)"/>
+      <path d="M50 54 C50 56.2 51.2 57.6 52.8 58" fill="none" stroke="var(--bg)" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>` },
+  { id: 4, title: "Quill & tear", note: "A quill that writes — and a single drop falling from the nib.",
+    art: `
+      <path d="M77 28 C61 30 45 44 41 64 L37 76 L46 70 C64 66 79 50 77 28 Z" fill="var(--fg)"/>
+      <path d="M77 28 C74 40 66 56 46 70" fill="none" stroke="var(--fg2)" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M37 76 L70 36" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M33.5 79 C33.5 79 29.5 84 29.5 86.5 A4 4 0 0 0 37.5 86.5 C37.5 84 33.5 79 33.5 79 Z" fill="var(--accent)"/>` },
+  { id: 5, title: "Sutured cover", note: "A closed book with a few lines of text and a row of stitches down its cover.",
+    art: `
+      <rect x="31" y="25" width="46" height="58" rx="5" fill="var(--fg)"/>
+      <rect x="31" y="25" width="10" height="58" rx="5" fill="var(--fg2)"/>
+      <rect x="46" y="34" width="24" height="3.4" rx="1.7" fill="var(--bg)" opacity=".85"/>
+      <rect x="46" y="41" width="17" height="3.4" rx="1.7" fill="var(--bg)" opacity=".6"/>
+      <path d="M58 52 V78" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+      <g stroke="var(--accent)" stroke-width="2" stroke-linecap="round">
+        <path d="M54.5 54.5 L61.5 58.5"/><path d="M61.5 54.5 L54.5 58.5"/>
+        <path d="M54.5 62.5 L61.5 66.5"/><path d="M61.5 62.5 L54.5 66.5"/>
+        <path d="M54.5 70.5 L61.5 74.5"/><path d="M61.5 70.5 L54.5 74.5"/>
+      </g>` },
+  { id: 6, title: "Page & plaster", note: "A page of text with a plaster over the corner — gentle, a little witty.",
+    art: `
+      <rect x="32" y="24" width="44" height="60" rx="5" fill="var(--fg)"/>
+      <g fill="var(--bg)" opacity=".8">
+        <rect x="39" y="33" width="30" height="3.4" rx="1.7"/><rect x="39" y="41" width="30" height="3.4" rx="1.7"/>
+        <rect x="39" y="49" width="22" height="3.4" rx="1.7"/>
+      </g>
+      <g transform="rotate(-35 66 68)">
+        <rect x="47" y="61" width="38" height="14" rx="7" fill="var(--bg)"/>
+        <rect x="49" y="63" width="34" height="10" rx="5" fill="var(--accent)"/>
+        <rect x="60" y="63" width="12" height="10" fill="var(--fg)" opacity=".4"/>
+      </g>` },
+];
+
+const palettes = [
+  { id: "ink",   label: "Ink & amber",  v: { "--bg": "#0F0F10", "--fg": "#E0A85A", "--fg2": "#A8691A", "--accent": "#E5484D" } },
+  { id: "paper", label: "Paper & ink",  v: { "--bg": "#F6F1E8", "--fg": "#1C1A16", "--fg2": "#6F5B3E", "--accent": "#C0392B" } },
+  { id: "teal",  label: "Deep teal",    v: { "--bg": "#0C1517", "--fg": "#4FD1C5", "--fg2": "#0E7C74", "--accent": "#FF7A7A" } },
+  { id: "berry", label: "Berry",        v: { "--bg": "#1B0F17", "--fg": "#F0A8CC", "--fg2": "#B2447F", "--accent": "#FFD27A" } },
+];
+const shapes = [
+  { id: "circle",  label: "Circle",   r: "50%" },
+  { id: "squircle", label: "Rounded",  r: "30%" },
+  { id: "square",  label: "Square",   r: "12%" },
+];
+
+let state = { palette: "ink", shape: "squircle", picked: null };
+
+const svg = (c) => `<svg viewBox="0 0 108 108" role="img" aria-label="${c.title}">${c.art}</svg>`;
+const icon = (c, px) => `<span class="icon" style="width:${px}px;height:${px}px">${svg(c)}</span>`;
+
+function renderControls() {
+  const pal = document.getElementById("palettes");
+  pal.querySelectorAll("button").forEach(b => b.remove());
+  palettes.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = p.label; b.setAttribute("aria-pressed", state.palette === p.id);
+    b.onclick = () => { state.palette = p.id; apply(); };
+    pal.appendChild(b);
+  });
+  const sh = document.getElementById("shapes");
+  sh.querySelectorAll("button").forEach(b => b.remove());
+  shapes.forEach(s => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.textContent = s.label; b.setAttribute("aria-pressed", state.shape === s.id);
+    b.onclick = () => { state.shape = s.id; apply(); };
+    sh.appendChild(b);
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  concepts.forEach(c => {
+    const card = document.createElement("button");
+    card.className = "card"; card.setAttribute("aria-pressed", state.picked === c.id);
+    card.innerHTML = `
+      <div class="big">${icon(c, 168)}</div>
+      <div class="sizes">
+        <div class="tile">${icon(c, 72)}<b>${NAME}</b></div>
+        <div class="tile">${icon(c, 48)}<span>48</span></div>
+        <div class="tile">${icon(c, 32)}<span>32</span></div>
+      </div>
+      <h2>${c.id}. ${c.title}</h2><p>${c.note}</p>`;
+    card.onclick = () => { state.picked = c.id; apply(); };
+    grid.appendChild(card);
+  });
+}
+
+function apply() {
+  const p = palettes.find(x => x.id === state.palette), s = shapes.find(x => x.id === state.shape);
+  Object.entries(p.v).forEach(([k, v]) => document.documentElement.style.setProperty(k, v));
+  document.documentElement.style.setProperty("--mask", s.r);
+  renderControls(); renderGrid();
+  const el = document.getElementById("picked");
+  if (state.picked) {
+    const c = concepts.find(x => x.id === state.picked);
+    el.innerHTML = `<strong>Picked: ${c.id}. ${c.title}</strong> in <strong>${p.label}</strong>. Tell me “icon ${c.id}, ${p.label}” and I will turn it into the real Android launcher icon and rename the app to “${NAME}”.`;
+  }
+}
+apply();
+</script>
+</body>
+</html>

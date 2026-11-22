@@ -22,3 +22,6 @@ graft/
 .ignore
 
 .superpowers/
+
+# user-supplied phone screenshots (private)
+docs/screenshots/WhatsApp*

@@ -21,7 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import com.exc33ded.library.ui.common.SearchField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -58,12 +58,9 @@ fun FindBookScreen(
         )
     }) { pad ->
         Column(Modifier.fillMaxSize().padding(pad).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(
-                value = s.query, onValueChange = vm::setQuery, modifier = Modifier.fillMaxWidth(), singleLine = true,
-                placeholder = { Text("Title, author, or both") },
-                trailingIcon = { IconButton(vm::search) { Icon(Icons.Filled.Search, "Search") } },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { vm.search() }),
+            SearchField(
+                value = s.query, onValueChange = vm::setQuery, placeholder = "Title, author, or both",
+                modifier = Modifier.fillMaxWidth(), onSearch = { vm.search() },
             )
             if (s.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
             s.message?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }

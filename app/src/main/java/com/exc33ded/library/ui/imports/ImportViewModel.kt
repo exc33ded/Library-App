@@ -33,6 +33,8 @@ class ImportViewModel @Inject constructor(
 
     fun retry(id: String) = viewModelScope.launch { imports.retry(id) }
     fun skip(id: String) = viewModelScope.launch { imports.markDone(id) }
+    fun dismissFailed() = viewModelScope.launch { imports.dismissFailed() }
+    fun dismissAll() = viewModelScope.launch { imports.dismissReviewable() }
 
     /** One-tap add: online cover, else the user's photo; existing categories that match subjects. */
     fun add(row: ImportRow) = viewModelScope.launch {

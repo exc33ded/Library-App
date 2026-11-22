@@ -40,6 +40,8 @@ class ImportRepository @Inject constructor(
     }
 
     suspend fun markDone(id: String) = dao.markDone(id)
+    suspend fun dismissFailed() = dao.dismissFailed()
+    suspend fun dismissReviewable() = dao.dismissReviewable()
     suspend fun get(id: String) = dao.get(id)
     suspend fun clearDone() = dao.clearDone()
 

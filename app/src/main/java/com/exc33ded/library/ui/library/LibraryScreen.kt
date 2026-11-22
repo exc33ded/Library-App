@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.QrCodeScanner
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -26,7 +25,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +38,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.exc33ded.library.settings.LibraryDisplayMode
 import com.exc33ded.library.ui.common.PlaceholderScreen
+import com.exc33ded.library.ui.common.SearchField
 import com.exc33ded.library.ui.common.StatusSelector
 import com.exc33ded.library.ui.profile.LocalProfile
 import com.exc33ded.library.ui.settings.DisplayOptions
@@ -65,10 +64,9 @@ fun LibraryScreen(
         if (profile.name.isNotBlank())
             Text("Hi, ${profile.name}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
-                value = s.filter.query, onValueChange = vm::setQuery, singleLine = true,
-                leadingIcon = { Icon(Icons.Filled.Search, null) }, placeholder = { Text("Search title, author or notes") },
-                modifier = Modifier.weight(1f),
+            SearchField(
+                value = s.filter.query, onValueChange = vm::setQuery,
+                placeholder = "Search your library", modifier = Modifier.weight(1f),
             )
             IconButton(onClick = onScanIsbn) { Icon(Icons.Filled.QrCodeScanner, contentDescription = "Scan ISBN barcode") }
             IconButton(onClick = { showDisplay = true }) { Icon(Icons.Filled.GridView, contentDescription = "Display options") }

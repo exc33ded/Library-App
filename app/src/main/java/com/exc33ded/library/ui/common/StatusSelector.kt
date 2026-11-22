@@ -1,11 +1,18 @@
 package com.exc33ded.library.ui.common
 
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.exc33ded.library.data.db.ReadingStatus
 
 fun ReadingStatus.label() = when (this) {
@@ -16,8 +23,8 @@ fun ReadingStatus.label() = when (this) {
 }
 
 /**
- * ponytail: SegmentedButton is stable and known-good; swap for M3 Expressive ButtonGroup in Phase 7.
- * `allowNone` adds an "All" segment (library filter); null = All.
+ * Pill chips instead of a segmented button: labels never wrap mid-word on narrow screens or large fonts, and the row
+ * scrolls sideways if it ever runs out of room. `allowNone` adds an "All" chip (library filter); null = All.
  */
 @Composable
 fun StatusSelector(
@@ -27,13 +34,16 @@ fun StatusSelector(
     allowNone: Boolean = false,
 ) {
     val options: List<ReadingStatus?> = (if (allowNone) listOf(null) else emptyList()) + ReadingStatus.entries
-    SingleChoiceSegmentedButtonRow(modifier) {
-        options.forEachIndexed { i, s ->
-            SegmentedButton(
-                selected = s == selected,
+    Row(modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        options.forEach { s ->
+            val isSelected = s == selected
+            FilterChip(
+                selected = isSelected,
                 onClick = { onSelect(s) },
-                shape = SegmentedButtonDefaults.itemShape(i, options.size),
-            ) { Text(s?.label() ?: "All") }
+                shape = CircleShape,
+                label = { Text(s?.label() ?: "All", maxLines = 1, softWrap = false) },
+                leadingIcon = if (isSelected) ({ Icon(Icons.Filled.Check, null) }) else null,
+            )
         }
     }
 }
