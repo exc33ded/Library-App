@@ -50,6 +50,12 @@ class SettingsRepositoryTest {
         assertEquals(6, r.settings.first().columns)
     }
 
+    @Test fun lastExportAtPersists() = runBlocking {
+        val r = repo()
+        r.update { it.copy(lastExportAt = 123L) }
+        assertEquals(123L, r.settings.first().lastExportAt)
+    }
+
     @Test fun modelsLocationAndWifiOnlyPersist() = runBlocking {
         val r = repo()
         r.update { it.copy(modelsLocation = ModelsLocation.SD_CARD, wifiOnlyDownloads = false) }

@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -27,6 +28,7 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
             p[STATUS] = n.showStatusBadge
             p[MODELS_LOC] = n.modelsLocation.name
             p[WIFI_ONLY] = n.wifiOnlyDownloads
+            p[LAST_EXPORT] = n.lastExportAt
         }
     }
 
@@ -42,6 +44,7 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
             showStatusBadge = p[STATUS] ?: d.showStatusBadge,
             modelsLocation = p[MODELS_LOC]?.let { runCatching { ModelsLocation.valueOf(it) }.getOrNull() } ?: d.modelsLocation,
             wifiOnlyDownloads = p[WIFI_ONLY] ?: d.wifiOnlyDownloads,
+            lastExportAt = p[LAST_EXPORT] ?: d.lastExportAt,
         )
     }
 
@@ -55,5 +58,6 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
         val STATUS = booleanPreferencesKey("show_status_badge")
         val MODELS_LOC = stringPreferencesKey("models_location")
         val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
+        val LAST_EXPORT = longPreferencesKey("last_export_at")
     }
 }

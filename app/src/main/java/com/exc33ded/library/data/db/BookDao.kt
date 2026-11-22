@@ -16,6 +16,9 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE id = :id")
     suspend fun get(id: String): BookEntity?
 
+    @Query("SELECT * FROM books")
+    suspend fun allIncludingDeleted(): List<BookEntity>
+
     @Upsert
     suspend fun upsert(book: BookEntity)
 }
