@@ -25,3 +25,5 @@ graft/
 
 # user-supplied phone screenshots (private)
 docs/screenshots/WhatsApp*
+
+dist/
