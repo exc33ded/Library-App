@@ -67,7 +67,7 @@ fun LibraryScreen(
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = s.filter.query, onValueChange = vm::setQuery, singleLine = true,
-                leadingIcon = { Icon(Icons.Filled.Search, null) }, placeholder = { Text("Search title or author") },
+                leadingIcon = { Icon(Icons.Filled.Search, null) }, placeholder = { Text("Search title, author or notes") },
                 modifier = Modifier.weight(1f),
             )
             IconButton(onClick = onScanIsbn) { Icon(Icons.Filled.QrCodeScanner, contentDescription = "Scan ISBN barcode") }
