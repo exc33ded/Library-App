@@ -25,6 +25,8 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
             p[COLUMNS] = clampColumns(n.columns)
             p[PROGRESS] = n.showProgressBadge
             p[STATUS] = n.showStatusBadge
+            p[MODELS_LOC] = n.modelsLocation.name
+            p[WIFI_ONLY] = n.wifiOnlyDownloads
         }
     }
 
@@ -38,6 +40,8 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
             columns = clampColumns(p[COLUMNS] ?: d.columns),
             showProgressBadge = p[PROGRESS] ?: d.showProgressBadge,
             showStatusBadge = p[STATUS] ?: d.showStatusBadge,
+            modelsLocation = p[MODELS_LOC]?.let { runCatching { ModelsLocation.valueOf(it) }.getOrNull() } ?: d.modelsLocation,
+            wifiOnlyDownloads = p[WIFI_ONLY] ?: d.wifiOnlyDownloads,
         )
     }
 
@@ -49,5 +53,7 @@ class SettingsRepository @Inject constructor(private val store: DataStore<Prefer
         val COLUMNS = intPreferencesKey("columns")
         val PROGRESS = booleanPreferencesKey("show_progress_badge")
         val STATUS = booleanPreferencesKey("show_status_badge")
+        val MODELS_LOC = stringPreferencesKey("models_location")
+        val WIFI_ONLY = booleanPreferencesKey("wifi_only_downloads")
     }
 }

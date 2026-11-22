@@ -3,6 +3,8 @@ package com.exc33ded.library.settings
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 enum class LibraryDisplayMode { OVERLAY_GRID, CAPTION_GRID, LIST }
 
+enum class ModelsLocation { PHONE, APP_FOLDER, SD_CARD }
+
 const val MIN_COLUMNS = 2
 const val MAX_COLUMNS = 6
 
@@ -14,6 +16,8 @@ data class AppSettings(
     val columns: Int = 3,
     val showProgressBadge: Boolean = true,
     val showStatusBadge: Boolean = true,
+    val modelsLocation: ModelsLocation = ModelsLocation.PHONE,
+    val wifiOnlyDownloads: Boolean = true,
 )
 
 fun clampColumns(n: Int): Int = n.coerceIn(MIN_COLUMNS, MAX_COLUMNS)

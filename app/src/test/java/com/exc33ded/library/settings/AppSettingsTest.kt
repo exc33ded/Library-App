@@ -33,5 +33,7 @@ class AppSettingsTest {
         assertEquals(false, d.amoled)
         assertEquals(LibraryDisplayMode.OVERLAY_GRID, d.displayMode)
         assertEquals(3, d.columns)
+        assertEquals(ModelsLocation.PHONE, d.modelsLocation)
+        assertEquals(true, d.wifiOnlyDownloads)
     }
 }

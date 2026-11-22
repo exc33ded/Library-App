@@ -49,4 +49,12 @@ class SettingsRepositoryTest {
         r.update { it.copy(columns = 99) }
         assertEquals(6, r.settings.first().columns)
     }
+
+    @Test fun modelsLocationAndWifiOnlyPersist() = runBlocking {
+        val r = repo()
+        r.update { it.copy(modelsLocation = ModelsLocation.SD_CARD, wifiOnlyDownloads = false) }
+        val s = r.settings.first()
+        assertEquals(ModelsLocation.SD_CARD, s.modelsLocation)
+        assertEquals(false, s.wifiOnlyDownloads)
+    }
 }
