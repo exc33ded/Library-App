@@ -13,5 +13,6 @@ import kotlinx.serialization.Serializable
 @Serializable data class FindBookKey(val isbn: String? = null, val query: String? = null, val importId: String? = null) : NavKey
 @Serializable data object CategoriesKey : NavKey
 @Serializable data object ImportKey : NavKey
+@Serializable data object SettingsKey : NavKey
 
 val topLevelKeys: List<NavKey> = listOf(LibraryKey, FeedKey, StatsKey, ProfileKey)

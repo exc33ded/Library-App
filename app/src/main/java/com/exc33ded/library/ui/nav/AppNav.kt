@@ -56,6 +56,8 @@ import com.exc33ded.library.ui.common.PlaceholderScreen
 import com.exc33ded.library.ui.find.FindBookScreen
 import com.exc33ded.library.ui.imports.ImportScreen
 import com.exc33ded.library.ui.library.LibraryScreen
+import com.exc33ded.library.ui.profile.ProfileScreen
+import com.exc33ded.library.ui.settings.SettingsScreen
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -139,7 +141,8 @@ fun AppNav() {
                 }
                 entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
                 entry<StatsKey> { PlaceholderScreen("Stats — Phase 5") }
-                entry<ProfileKey> { PlaceholderScreen("Profile — Phase 5") }
+                entry<ProfileKey> { ProfileScreen(onOpenSettings = { backStack.add(SettingsKey) }) }
+                entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }) }
                 entry<BookDetailKey> { key ->
                     BookDetailScreen(
                         bookId = key.id,
