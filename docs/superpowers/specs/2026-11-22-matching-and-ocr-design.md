@@ -22,6 +22,13 @@ Today every tuning run needs the emulator and the full 96-photo pipeline. Instea
 ## OCR comparison (decision rule)
 Run the same matching eval on `ocr_mlkit.json` and `ocr_paddle.json`. Adopt PaddleOCR on Android only if it improves same-work accuracy by ≥ 8 points over ML Kit **after** the matching fixes, and an Android runtime (NCNN/ONNX/ExecuTorch) fits the 6 GB phone budget. Otherwise ML Kit stays. Urdu/Arabic covers are expected to need the Phase 3 vision model either way (PP-OCRv6's unified model has no Arabic; the v5 Arabic model would be a separate download).
 
+## AI title correction (user idea 2026-11-22) — measured here, shipped with sub-project 3
+A small text model takes the raw OCR lines and returns a cleaned `title` / `author` ("velloweace" -> "Yellowface", drops taglines and publisher text), which then feeds the same search + ranking. Design points:
+- It is an **optional stage after the cheap fixes**: pipeline = OCR -> query variants + fuzzy ranking -> (only if no candidate passes the threshold) AI correction -> search again. No model downloaded = the stage is skipped, nothing breaks.
+- Runs on-device and in the background only (6 GB phone, spec §7); model comes from the model manager (sub-project 4), candidate models are compared in sub-project 3.
+- Prompt output is constrained to `{"title":..., "author":...}` and never trusted blindly: the corrected string is only a search query, and the candidate must still pass `scoreCandidate` against the *original* OCR text, so a hallucinated title cannot win on its own.
+- Measured with the same JVM benchmark by adding a `corrector` hook (identity by default); the offline gain is computed with a locally-run model before any Android work. Photos and their OCR text stay on this PC and are not sent to any online service.
+
 ## Out of scope
 Shipping PaddleOCR on Android (only a follow-up if the rule above passes), the Phase 3 vision model, Google Books key plumbing beyond the `langRestrict` param.
 
