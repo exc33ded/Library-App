@@ -77,6 +77,11 @@ import com.exc33ded.library.ui.models.ModelsStorageScreen
 import com.exc33ded.library.ui.profile.ProfileScreen
 import com.exc33ded.library.ui.settings.SettingsScreen
 import com.exc33ded.library.ui.stats.StatsScreen
+import com.google.android.gms.common.api.OptionalModuleApi
+import com.google.android.gms.common.moduleinstall.InstallStatusListener
+import com.google.android.gms.common.moduleinstall.ModuleInstallStatusUpdate
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.withTimeoutOrNull
 import com.google.android.gms.common.moduleinstall.ModuleInstall
 import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -104,28 +109,58 @@ fun AppNav() {
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     // One shared scan flow for the "+" menu and the library search bar.
+    /**
+     * True when Google's scanner module is on the phone. Otherwise asks Play services to fetch it (a one-time download that
+     * would make the first scan fail with "Waiting for the Barcode UI module") and waits for it to finish.
+     */
+    suspend fun scannerModuleReady(scanner: OptionalModuleApi, onDownloading: () -> Unit): Boolean {
+        val client = ModuleInstall.getClient(context)
+        if (client.areModulesAvailable(scanner).await().areModulesAvailable()) return true
+        onDownloading()
+        val done = CompletableDeferred<Boolean>()
+        val listener = InstallStatusListener { update ->
+            when (update.installState) {
+                ModuleInstallStatusUpdate.InstallState.STATE_COMPLETED -> done.complete(true)
+                ModuleInstallStatusUpdate.InstallState.STATE_FAILED,
+                ModuleInstallStatusUpdate.InstallState.STATE_CANCELED -> done.complete(false)
+                else -> Unit
+            }
+        }
+        val response = client.installModules(ModuleInstallRequest.newBuilder().addApi(scanner).setListener(listener).build()).await()
+        if (response.areModulesAlreadyInstalled()) return true
+        return withTimeoutOrNull(120_000L) { done.await() } ?: false
+    }
+
     fun scanIsbn() = scope.launch {
         snackbar.currentSnackbarData?.dismiss()
-        val opening = launch { snackbar.showSnackbar("Opening scanner…", duration = SnackbarDuration.Short) }
+        var notice = launch { snackbar.showSnackbar("Opening scanner…", duration = SnackbarDuration.Indefinite) }
         val raw = try {
             val scanner = GmsBarcodeScanning.getClient(
                 context,
                 GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_EAN_13).enableAutoZoom().build(),
             )
-            // Ask Google Play services to fetch the scanner module up front so the first scan does not fail while it downloads.
-            ModuleInstall.getClient(context).installModules(ModuleInstallRequest.newBuilder().addApi(scanner).build()).await()
+            val ready = scannerModuleReady(scanner) {
+                notice.cancel()
+                snackbar.currentSnackbarData?.dismiss()
+                notice = launch { snackbar.showSnackbar("Downloading the scanner (one time, needs internet)…", duration = SnackbarDuration.Indefinite) }
+            }
+            if (!ready) throw IllegalStateException("The scanner module is still downloading")
             scanner.startScan().await().rawValue
         } catch (e: CancellationException) {
             null // user closed the scanner; the scope itself is not cancelled
         } catch (e: Exception) {
             Log.w("ScanIsbn", e)
-            opening.cancel()
+            notice.cancel()
             snackbar.currentSnackbarData?.dismiss()
-            val result = snackbar.showSnackbar("Couldn't open the scanner", actionLabel = "Enter ISBN", duration = SnackbarDuration.Long)
+            val stillDownloading = e.message?.contains("module", ignoreCase = true) == true
+            val result = snackbar.showSnackbar(
+                if (stillDownloading) "The scanner is still downloading from Google. Try again in a minute." else "Couldn't open the scanner",
+                actionLabel = "Enter ISBN", duration = SnackbarDuration.Long,
+            )
             if (result == SnackbarResult.ActionPerformed) push(FindBookKey())
             null
         }
-        opening.cancel()
+        notice.cancel()
         snackbar.currentSnackbarData?.dismiss()
         val isbn = raw?.let(Isbn::normalize)
         when {

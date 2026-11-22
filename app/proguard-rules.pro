@@ -16,3 +16,10 @@
 # Optional logging backends referenced by Ktor.
 -dontwarn org.slf4j.**
 -dontwarn javax.annotation.**
+
+# Google Play services / ML Kit: the code scanner and module-install clients are reflection/ServiceLoader heavy;
+# R8 obfuscation broke them in release (NullPointerException inside the scanner client). Keep them intact.
+-keep class com.google.android.gms.** { *; }
+-keep class com.google.mlkit.** { *; }
+-dontwarn com.google.android.gms.**
+-dontwarn com.google.mlkit.**
