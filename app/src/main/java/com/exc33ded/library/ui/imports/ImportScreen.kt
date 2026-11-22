@@ -1,5 +1,6 @@
 package com.exc33ded.library.ui.imports
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,10 +24,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,8 +57,11 @@ fun ImportScreen(
     val waiting = rows.count { it.item.state == ImportState.PENDING || it.item.state == ImportState.PROCESSING }
     val failed = rows.count { it.item.state == ImportState.FAILED }
     val reviewable = rows.count { it.item.state == ImportState.REVIEW || it.item.state == ImportState.FAILED }
+    val adding by vm.adding.collectAsStateWithLifecycle()
     var confirmAll by remember { mutableStateOf(false) }
-    Scaffold(topBar = {
+    val snackbar = remember { SnackbarHostState() }
+    LaunchedEffect(vm) { vm.messages.collect { snackbar.showSnackbar(it) } }
+    Scaffold(snackbarHost = { SnackbarHost(snackbar) }, topBar = {
         TopAppBar(
             title = { Text(if (waiting > 0) "Reading covers… $waiting left" else "Review imports") },
             navigationIcon = { IconButton(onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
@@ -94,13 +101,24 @@ fun ImportScreen(
                                             Text(c.authors, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         }
                                     }
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Button({ vm.add(row) }) { Text("Add") }
-                                        OutlinedButton({ onEdit(row.item.id, c) }) { Text("Edit") }
-                                    }
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        TextButton({ onSearch(row.item.id, row.item.query) }) { Text("Wrong book? Search") }
-                                        TextButton({ vm.skip(row.item.id) }) { Text("Dismiss") }
+                                    Crossfade(row.item.id in adding, label = "adding") { busy ->
+                                        if (busy) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                                Text("  Adding…", style = MaterialTheme.typography.bodyMedium)
+                                            }
+                                        } else {
+                                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Button({ vm.add(row) }) { Text("Add") }
+                                                    OutlinedButton({ onEdit(row.item.id, c) }) { Text("Edit") }
+                                                }
+                                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                    TextButton({ onSearch(row.item.id, row.item.query) }) { Text("Wrong book? Search") }
+                                                    TextButton({ vm.skip(row.item.id) }) { Text("Dismiss") }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                                 ImportState.FAILED -> {

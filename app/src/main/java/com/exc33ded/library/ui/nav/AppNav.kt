@@ -3,7 +3,13 @@ package com.exc33ded.library.ui.nav
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -29,8 +35,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +58,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.metadata
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
@@ -67,6 +76,8 @@ import com.exc33ded.library.ui.models.ModelsStorageScreen
 import com.exc33ded.library.ui.profile.ProfileScreen
 import com.exc33ded.library.ui.settings.SettingsScreen
 import com.exc33ded.library.ui.stats.StatsScreen
+import com.google.android.gms.common.moduleinstall.ModuleInstall
+import com.google.android.gms.common.moduleinstall.ModuleInstallRequest
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
@@ -89,17 +100,30 @@ fun AppNav() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
+    // One shared scan flow for the "+" menu and the library search bar.
     fun scanIsbn() = scope.launch {
+        snackbar.currentSnackbarData?.dismiss()
+        val opening = launch { snackbar.showSnackbar("Opening scanner…", duration = SnackbarDuration.Short) }
         val raw = try {
-            GmsBarcodeScanning.getClient(
+            val scanner = GmsBarcodeScanning.getClient(
                 context,
                 GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_EAN_13).enableAutoZoom().build(),
-            ).startScan().await().rawValue
+            )
+            // Ask Google Play services to fetch the scanner module up front so the first scan does not fail while it downloads.
+            ModuleInstall.getClient(context).installModules(ModuleInstallRequest.newBuilder().addApi(scanner).build()).await()
+            scanner.startScan().await().rawValue
         } catch (e: CancellationException) {
             null // user closed the scanner; the scope itself is not cancelled
         } catch (e: Exception) {
-            snackbar.showSnackbar("Scanner unavailable — try Search instead"); null
+            Log.w("ScanIsbn", e)
+            opening.cancel()
+            snackbar.currentSnackbarData?.dismiss()
+            val result = snackbar.showSnackbar("Couldn't open the scanner", actionLabel = "Enter ISBN", duration = SnackbarDuration.Long)
+            if (result == SnackbarResult.ActionPerformed) push(FindBookKey())
+            null
         }
+        opening.cancel()
+        snackbar.currentSnackbarData?.dismiss()
         val isbn = raw?.let(Isbn::normalize)
         when {
             raw == null -> Unit
@@ -190,8 +214,29 @@ fun AppNav() {
                             onEdit = { push(BookEditKey(key.id)) },
                         )
                     }
-                    entry<BookEditKey> { key ->
-                        BookEditScreen(bookId = key.id, prefill = key.prefill, importId = key.importId, onDone = { backStack.removeLastOrNull() })
+                    entry<BookEditKey>(
+                        metadata = metadata {
+                            // Sheet-like: slides up on push, slides down on pop.
+                            put(NavDisplay.TransitionKey) {
+                                (slideInVertically(tween(260, easing = FastOutSlowInEasing)) { it / 6 } + fadeIn(tween(200))) togetherWith
+                                    fadeOut(tween(200))
+                            }
+                            put(NavDisplay.PopTransitionKey) {
+                                fadeIn(tween(200)) togetherWith
+                                    (slideOutVertically(tween(240, easing = FastOutLinearInEasing)) { it / 6 } + fadeOut(tween(160)))
+                            }
+                        },
+                    ) { key ->
+                        BookEditScreen(
+                            bookId = key.id,
+                            prefill = key.prefill,
+                            importId = key.importId,
+                            onDone = { backStack.removeLastOrNull() },
+                            onSaved = { title ->
+                                backStack.removeLastOrNull()
+                                scope.launch { snackbar.showSnackbar("Saved “$title”") }
+                            },
+                        )
                     }
                     entry<FindBookKey> { key ->
                         FindBookScreen(
