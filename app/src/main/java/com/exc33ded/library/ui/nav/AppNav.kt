@@ -179,7 +179,7 @@ fun AppNav() {
                     entry<FeedKey> { FeedScreen(onManage = { push(ManageFeedsKey) }) }
                     entry<ManageFeedsKey> { ManageFeedsScreen(onBack = { backStack.removeLastOrNull() }) }
                     entry<StatsKey> { StatsScreen() }
-                    entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }) }
+                    entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }, onOpenBackup = { push(BackupKey) }) }
                     entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, onOpenModels = { push(ModelsStorageKey) }, onOpenBackup = { push(BackupKey) }) }
                     entry<BackupKey> { BackupScreen(onBack = { backStack.removeLastOrNull() }) }
                     entry<ModelsStorageKey> { ModelsStorageScreen(onBack = { backStack.removeLastOrNull() }) }

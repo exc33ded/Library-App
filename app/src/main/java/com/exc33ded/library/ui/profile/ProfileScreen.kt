@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -44,7 +45,7 @@ import com.exc33ded.library.profile.initials
 import java.io.File
 
 @Composable
-fun ProfileScreen(onOpenSettings: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
+fun ProfileScreen(onOpenSettings: () -> Unit, onOpenBackup: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
     val profile = LocalProfile.current
     val stats by vm.stats.collectAsStateWithLifecycle()
     var editing by remember { mutableStateOf(false) }
@@ -66,6 +67,12 @@ fun ProfileScreen(onOpenSettings: () -> Unit, vm: ProfileViewModel = hiltViewMod
         FilledTonalButton(onClick = { editing = true }) { Text("Edit profile") }
         GoalCard(stats.readThisYear, profile.yearlyGoal) { editing = true }
         StatsCard(stats)
+        ListItem(
+            headlineContent = { Text("Backup & restore") },
+            supportingContent = { Text("Export or import your library, e.g. to move to a new phone") },
+            leadingContent = { Icon(Icons.Filled.Backup, null) },
+            modifier = Modifier.clickable(onClick = onOpenBackup),
+        )
         ListItem(
             headlineContent = { Text("Settings") },
             leadingContent = { Icon(Icons.Filled.Settings, null) },
