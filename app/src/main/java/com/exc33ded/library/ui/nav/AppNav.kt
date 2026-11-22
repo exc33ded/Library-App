@@ -4,6 +4,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.RowScope
@@ -21,8 +26,10 @@ import androidx.compose.material.icons.filled.RssFeed
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -31,6 +38,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
 import androidx.core.content.FileProvider
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -66,9 +75,15 @@ import kotlinx.coroutines.tasks.await
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppNav() {
     val backStack = rememberNavBackStack(LibraryKey)
+    // -1 / +1 while a tab switch is animating (direction of travel), 0 for ordinary pushes.
+    var tabDirection by remember { mutableIntStateOf(0) }
+    fun push(key: NavKey) { tabDirection = 0; backStack.add(key) }
+    val spatial = MaterialTheme.motionScheme.defaultSpatialSpec<IntOffset>()
+    val effects = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
     val top = backStack.lastOrNull()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -88,17 +103,17 @@ fun AppNav() {
         when {
             raw == null -> Unit
             isbn == null -> snackbar.showSnackbar("That barcode isn't a book ISBN")
-            else -> backStack.add(FindBookKey(isbn))
+            else -> push(FindBookKey(isbn))
         }
     }
     val navVm: AppNavViewModel = hiltViewModel()
     val pickPhotos = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia(100)) { uris ->
-        if (uris.isNotEmpty()) { navVm.import(uris); backStack.add(ImportKey) }
+        if (uris.isNotEmpty()) { navVm.import(uris); push(ImportKey) }
     }
     var cameraFile by remember { mutableStateOf<File?>(null) }
     val takePhoto = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
         val f = cameraFile
-        if (ok && f != null) { navVm.importFile(f.absolutePath); backStack.add(ImportKey) }
+        if (ok && f != null) { navVm.importFile(f.absolutePath); push(ImportKey) }
     }
     fun launchCamera() {
         val f = File(context.filesDir, "camera/${System.currentTimeMillis()}.jpg").apply { parentFile?.mkdirs() }
@@ -113,10 +128,13 @@ fun AppNav() {
             AnimatedVisibility(visible = top in topLevelKeys) {
                 BottomBar(
                     current = top,
-                    onSelect = { backStack.switchTo(it) },
+                    onSelect = { key ->
+                        tabDirection = Integer.signum(topLevelKeys.indexOf(key) - topLevelKeys.indexOf(top))
+                        backStack.switchTo(key)
+                    },
                     onScan = { scanIsbn() },
-                    onSearch = { backStack.add(FindBookKey()) },
-                    onManual = { backStack.add(BookEditKey()) },
+                    onSearch = { push(FindBookKey()) },
+                    onManual = { push(BookEditKey()) },
                     onPhoto = { launchCamera() },
                     onGallery = { pickPhotos.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 )
@@ -131,23 +149,35 @@ fun AppNav() {
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
             ),
+            transitionSpec = {
+                val d = tabDirection
+                if (d == 0) {
+                    // ordinary push: standard horizontal slide
+                    slideInHorizontally { it } togetherWith slideOutHorizontally { -it }
+                } else {
+                    // tab switch: a nudge toward the direction of travel plus a fade; timing from the Expressive motion scheme
+                    (slideInHorizontally(spatial) { d * it / 3 } + fadeIn(effects)) togetherWith
+                        (slideOutHorizontally(spatial) { -d * it / 3 } + fadeOut(effects))
+                }
+            },
+            popTransitionSpec = { slideInHorizontally { -it } togetherWith slideOutHorizontally { it } },
             entryProvider = entryProvider {
                 entry<LibraryKey> {
                     LibraryScreen(
-                        onOpenBook = { id -> backStack.add(BookDetailKey(id)) },
-                        onManageCategories = { backStack.add(CategoriesKey) },
-                        onOpenImports = { backStack.add(ImportKey) },
+                        onOpenBook = { id -> push(BookDetailKey(id)) },
+                        onManageCategories = { push(CategoriesKey) },
+                        onOpenImports = { push(ImportKey) },
                     )
                 }
                 entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
                 entry<StatsKey> { PlaceholderScreen("Stats — Phase 5") }
-                entry<ProfileKey> { ProfileScreen(onOpenSettings = { backStack.add(SettingsKey) }) }
+                entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }) }
                 entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }) }
                 entry<BookDetailKey> { key ->
                     BookDetailScreen(
                         bookId = key.id,
                         onBack = { backStack.removeLastOrNull() },
-                        onEdit = { backStack.add(BookEditKey(key.id)) },
+                        onEdit = { push(BookEditKey(key.id)) },
                     )
                 }
                 entry<BookEditKey> { key ->
@@ -160,7 +190,7 @@ fun AppNav() {
                         onBack = { backStack.removeLastOrNull() },
                         onPicked = { c ->
                             backStack.removeLastOrNull() // replace Find with Edit so Back returns to the library
-                            backStack.add(BookEditKey(prefill = c, importId = key.importId))
+                            push(BookEditKey(prefill = c, importId = key.importId))
                         },
                     )
                 }
@@ -168,8 +198,8 @@ fun AppNav() {
                 entry<ImportKey> {
                     ImportScreen(
                         onBack = { backStack.removeLastOrNull() },
-                        onEdit = { id, c -> backStack.add(BookEditKey(prefill = c, importId = id)) },
-                        onSearch = { id, q -> backStack.add(FindBookKey(query = q, importId = id)) },
+                        onEdit = { id, c -> push(BookEditKey(prefill = c, importId = id)) },
+                        onSearch = { id, q -> push(FindBookKey(query = q, importId = id)) },
                     )
                 }
             },
