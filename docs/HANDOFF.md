@@ -1,10 +1,10 @@
-# Handoff — 2026-11-22 (updated after UI overhaul)
+# Handoff — 2026-11-22 (updated after matching fixes, Profile and tab motion)
 
 Personal Android book library app (Kotlin + Compose). Read `CLAUDE.md` first (toolchain env vars,
 commands, architecture, project rules), then the spec
 `docs/superpowers/specs/2026-11-21-book-library-app-design.md`.
 
-Repo: `exc33ded/Library-App` (public) — `main` at `7a7bc91` + handoff commit (UI overhaul commits not pushed yet).
+Repo: `exc33ded/Library-App` (public) — local `main` is ahead of the remote by many commits — **nothing pushed this session** (public repo; push only when the user says so).
 
 ## Where things stand
 
@@ -14,18 +14,23 @@ Repo: `exc33ded/Library-App` (public) — `main` at `7a7bc91` + handoff commit (
 | 2a Lookup + ISBN scan + covers | `plans/2026-11-22-phase-2a-lookup-and-scan.md` | ✅ done; search→prefill→save checked on emulator. **ISBN scan untested** (needs real phone) |
 | 2b Cover photo + batch import | `plans/2026-11-22-phase-2b-photo-import.md` | ✅ built; benchmark run. **Task 8 checklist items 1–5 not hand-tested** (camera, Add/Edit/Wrong-book buttons, resume after kill) |
 | UI overhaul + Settings | `plans/2026-11-22-ui-overhaul-settings.md` (spec `specs/2026-11-22-ui-overhaul-settings-design.md`) | ✅ done, checked on emulator: Overlay/Caption/List modes, 2–6 columns, badges, Light/Dark/System, dynamic colors on/off (Ink & amber fallback), AMOLED, persistence across relaunch. Not checked: many-book grids (emulator library has 1 book), real phone |
-| 3 On-device AI | not written | next after matching fixes |
+| Matching fixes + OCR comparison | `plans/2026-11-22-matching-and-ocr.md` (spec `specs/2026-11-22-matching-and-ocr-design.md`) | ✅ matching done: **64% strict / 74% author-lenient** on ML Kit text (was 33%/43%). PaddleOCR comparison **pending** — see Benchmark below |
+| Profile + tab motion | `plans/2026-11-22-profile-and-tab-motion.md` (spec `specs/2026-11-22-profile-and-tab-motion-design.md`) | ✅ done, checked on emulator: profile edit (name, bio, goal) saves and persists across relaunch, goal ring, stats card, Library greeting, **slide + fade between tabs confirmed from a 10x-slowed screen recording**. Not checked: photo pick/remove, light theme on Profile, goal ring above 0% |
+| 3 On-device AI | not written | next; includes the optional AI title-correction stage (matching spec) |
 | 4 Backup (export/import zip) | not written | Supabase **dropped** 2026-11-22 — phone-only storage |
-| 5 Profile · 6 Feed · 7 Motion polish | not written | — |
+| 5 Stats tab · 6 Feed · 7 Motion polish | not written | Profile screen itself is done (above); Stats/Feed tabs are still placeholders |
 
-68 JVM unit tests pass (`.\gradlew.bat testDebugUnitTest`).
+103 JVM unit tests pass (1 skipped: the env-gated benchmark replay) (`.\gradlew.bat testDebugUnitTest`).
 
 ## Decisions made this session (don't re-litigate)
 
 - **Storage is phone-only.** No Supabase, no accounts. Schema keeps sync-ready columns
   (`updatedAt`, `deleted`, `dirty`, UUIDs) in case cloud is wanted later. Backup = Phase 4 zip export/import.
-- **Coding is delegated to Claude subagents on Sonnet** (Agent tool, `model: "sonnet"`), given full task
-  text; main session reviews, re-runs tests, commits. (opencode was used earlier — free models only if ever again.)
+- **Coding is delegated; the main session is the "head"** (plans, reviews, re-runs tests, commits). Workers: Claude subagents on
+  Sonnet (default for app code) and **opencode free models as an "intern"** for small, fully specified tasks
+  (`opencode run --auto -m opencode/hy4-flash-free "<prompt>"`; `--auto` is required headless, user approved it). Never give a worker
+  `local.properties` or `docs/Books-Photo/`. This session opencode wrote the PaddleOCR script and Profile Tasks 1-3 (all reviewed);
+  `opencode stats --days 1 --models` shows its real token use (about 163K input / 21K output at $0 for those runs).
 - Target phone: **Samsung Galaxy A07-class, 6 GB RAM** → AI optional and background-only; default
   cover reading = ML Kit OCR + online lookup. Model plan in spec §3/§7 (Qwen3-0.6B summaries,
   LFM2.5-VL-1.6B / Gemma 4 E2B optional experiments).
@@ -34,27 +39,36 @@ Repo: `exc33ded/Library-App` (public) — `main` at `7a7bc91` + handoff commit (
 
 ## Benchmark (spec §14)
 
-96 user photos in `docs/Books-Photo/` (gitignored), labels in `docs/Books-Photo/labels.csv`
-(drafted by subagents — **user has not confirmed yet**).
+96 user photos in `docs/Books-Photo/` (gitignored, **private**), labels in `docs/Books-Photo/labels.csv`
+(drafted by subagents — **user has not confirmed yet**; the "Not a book" row is skipped, so 95 are scored).
 
-First run (OCR + Open Library, no Google Books key): **32/96 strict (33%), ~41/96 same-work (~43%)**;
-23 wrong, 41 failed. Causes: OCR misreads on display fonts break exact-token search; Urdu/Arabic-script
-covers unreadable by Latin OCR; taglines/second titles leak into the query; original-language titles
-returned (La Peste, Белые ночи); Islamic-press covers with publisher-only text.
+| Run | Strict | Author-lenient |
+|---|---|---|
+| Baseline (Phase 2b, first-result matching) | 32/96 (33%) | ~41 (~43%) |
+| New matching, ML Kit text, first cut | 58/95 (61%) | 66 (69%) |
+| + big-word coverage, stricter confidence (0.75), best-overall fallback | **61/95 (64%)** | **71 (74%)** |
+| PaddleOCR PP-OCRv6, detection capped at 960 px (**unfair**, my speed shortcut) | 48/95 (50%) | 53 (55%) |
+| PaddleOCR PP-OCRv6, full detection size | **pending** (run was at ~38/96 photos when this was written) | |
 
-How to re-run (emulator `library_pixel` already has the photos in `/sdcard/Pictures/books` and
-`/data/local/tmp/books`):
+Remaining misses (ML Kit text): OCR misreads (Kite Runner, Mountains Echoed), Urdu/Islamic-press covers, near-miss titles.
+These are what the AI title-correction stage and the Phase 3 vision model are for.
+
+**Replay without the emulator** (the point of the new harness): the ML Kit OCR text is in `docs/Books-Photo/ocr_mlkit.json`
+and Open Library answers are cached in `docs/Books-Photo/ol_cache.json`, so tuning the scoring in `imports/Matching.kt` is a replay:
 ```powershell
-emulator -avd library_pixel            # from $env:ANDROID_HOME\emulator
-.\gradlew.bat installDebug
-adb shell 'run-as com.exc33ded.library sh -c "rm -rf files/imports; mkdir -p files/bench && cp /data/local/tmp/books/*.jpg files/bench/"'
-# clear old queue: uninstall/reinstall, or clear app data: adb shell pm clear com.exc33ded.library (then re-copy bench)
-adb shell am broadcast -n com.exc33ded.library/.debug.ImportDirReceiver   # debug-only hook
-# wait until files/imports has 96 files, then:
-adb shell am force-stop com.exc33ded.library
-adb exec-out run-as com.exc33ded.library cat databases/library.db > library.db   # also -wal and -shm
-python -I tools/benchmark.py library.db docs/Books-Photo/labels.csv <empty-or-media_ids.txt>
+$env:BENCH_OCR="D:\claude-exp\words-and-wounds\docs\Books-Photo\ocr_mlkit.json"      # or ocr_paddle.json
+$env:BENCH_LABELS="D:\claude-exp\words-and-wounds\docs\Books-Photo\labels.csv"
+$env:BENCH_OUT="D:\claude-exp\words-and-wounds\docs\Books-Photo\report.txt"
+$env:BENCH_CACHE="D:\claude-exp\words-and-wounds\docs\Books-Photo\ol_cache.json"
+.\gradlew.bat testDebugUnitTest --tests "*.MatchBenchmarkTest" --rerun-tasks   # prints strict/lenient, writes the report
 ```
+**To finish the OCR decision:** when `docs/Books-Photo/ocr_paddle.json` exists (script `tools/ocr_paddle.py`, run with
+`C:\Users\sarim\paddle-venv\Scripts\python.exe`, a Python 3.12 venv outside the repo; set `PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True`),
+run the replay above with `BENCH_OCR` pointing at it and apply the spec's rule (adopt Paddle only if >= 8 points better than ML Kit
+and an Android runtime fits the 6 GB phone). `ocr_paddle_det960.json` (the unfair run) is kept for reference.
+Fresh ML Kit dump (if the OCR code changes): `adb shell am broadcast -n com.exc33ded.library/.debug.OcrDumpReceiver` with the app in the
+foreground (it must not be backgrounded), wait for `files/ocr_mlkit.done`, then `adb exec-out run-as com.exc33ded.library cat files/ocr_mlkit.json`.
+Paddle on Windows needs `enable_mkldnn=False` (already in the script); at full size it takes ~50 s/photo on CPU.
 
 ## Planned next (agreed with user 2026-11-22)
 
@@ -73,19 +87,20 @@ with free-space check and per-model delete.
 1. **User:** confirm/correct `labels.csv` (flagged: #1 envelope "Not a book", Urdu covers #7/#8/#32,
    Rumi author, Jannah, #35 author, Russian Masters, Fearless #3; rows #89–96 were not re-verified).
 2. **User:** add `googleBooksKey=…` to `local.properties` (Google Cloud → Books API → API key). Never commit it.
-3. **Improve matching** (cheap fixes before Phase 3), then re-run the benchmark:
-   - prefer English titles (Open Library edition/`lang=en`, or Google Books first when a key exists);
-   - query variants per photo: full → top line + author line → each top line alone → fuzzy tokens;
-   - pick the candidate whose title/author best overlaps the OCR text instead of blindly taking the first;
-   - treat "same work, other language" as a match in `tools/benchmark.py` (compare via `olWorkKey` or author).
-4. Hand-test Phase 2b checklist on the emulator, and ISBN scan on the real phone.
-5. Write the **Phase 3 plan** (LiteRT-LM 0.19.1, model download, summary + optional vision reader),
+3. ~~Improve matching~~ done (see Benchmark). Still open: Google Books first when a key exists; `lang` params on the sources (deferred: they would also change manual search).
+4. Finish the PaddleOCR comparison (see Benchmark), then record the decision in spec §14.
+5. Hand-test on a **real phone**: ISBN scan (the + menu → Scan ISBN), camera photo import, Profile photo pick, the Phase 2b checklist.
+6. Write the **Phase 3 plan** (LiteRT-LM 0.19.1, model download, summary + optional vision reader),
    using benchmark numbers to decide how much vision AI is needed (Urdu covers need it regardless).
 
 ## Gotchas
 
 - Use the JDK 21 env vars from `CLAUDE.md`; system `java` is 8. If `GRADLE_USER_HOME` is preset to a scoop dir without a wrapper distribution, run `Remove-Item Env:GRADLE_USER_HOME` before `gradlew` (first build after that takes ~4 min).
 - Tab switches clear the back stack (and ViewModels), so settings are read from `LocalAppSettings` (collected once in `MainActivity`) instead of per-screen collectors, to avoid a defaults flash.
+- Android's first-use "Try out your stylus" tutorial can pop up when tapping a text field on the emulator; tap Cancel. `adb input text` needs `%s` for spaces.
+- To see tab/screen animations in a test: `adb shell settings put global animator_duration_scale 10`, screen-record (`screenrecord`), extract frames with OpenCV; **restore the scale to 1**.
+- DataStore cannot write twice to the same file in a JVM test on Windows (`File.renameTo` will not overwrite) — repository tests use an in-memory `DataStore<Preferences>` fake (see `ProfileRepositoryTest`).
+- Git Bash rewrites device paths like `/data/...` in `adb` commands; use PowerShell or `MSYS_NO_PATHCONV=1`.
 - Emulator quick-boot can show a black screen for ~20 s after launch; wait before concluding anything.
 - `java.util.Properties` in `build.gradle.kts` must be imported (inside Gradle scripts `java.` resolves to the `java {}` extension).
 - Hilt `@AndroidEntryPoint` on a BroadcastReceiver doesn't compile with the Gradle plugin here — use an `@EntryPoint` (see `app/src/debug/.../ImportDirReceiver.kt`).
