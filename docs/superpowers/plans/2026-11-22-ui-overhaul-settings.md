@@ -203,7 +203,8 @@ class SettingsRepositoryTest {
 ```
 
 - [ ] **Step 2: Run, expect FAIL** — `.\gradlew.bat testDebugUnitTest --tests "*.SettingsRepositoryTest"`
-(If `kotlinx-coroutines` is not on the unit-test classpath, it is already an `implementation` dependency, which is visible to unit tests.)
+(`kotlinx-coroutines` is already an `implementation` dependency, visible to unit tests.)
+**Fallback:** if the test, once the implementation exists, throws `Method … not mocked`, add `@RunWith(RobolectricTestRunner::class)` and `@Config(sdk = [35])` to the test class (the repo's Robolectric convention) instead of changing the repository.
 
 - [ ] **Step 3: Implement** — `settings/SettingsRepository.kt`
 
@@ -353,7 +354,9 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -387,9 +390,20 @@ fun LibraryTheme(settings: AppSettings, content: @Composable () -> Unit) {
             isAppearanceLightNavigationBars = !dark
         }
     }
-    MaterialExpressiveTheme(colorScheme = colors, motionScheme = MotionScheme.expressive(), content = content)
+    MaterialExpressiveTheme(colorScheme = colors, motionScheme = MotionScheme.expressive()) {
+        CompositionLocalProvider(LocalAppSettings provides settings, content = content)
+    }
 }
+
+/**
+ * Settings collected once in MainActivity for the app's lifetime. Screens read this instead of
+ * collecting their own copy: top-level tab switches clear the back stack (and the ViewModel), so a
+ * per-screen collector would flash the defaults on every return to Library.
+ */
+val LocalAppSettings = compositionLocalOf { AppSettings() }
 ```
+
+**Before editing `LibraryTheme`'s signature, grep for `LibraryTheme(` (e.g. `@Preview`s) and update every caller.**
 
 - [ ] **Step 3: MainActivity** — inject the repository and pass settings:
 
@@ -509,9 +523,6 @@ import androidx.lifecycle.viewModelScope
 import com.exc33ded.library.settings.AppSettings
 import com.exc33ded.library.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -551,6 +562,7 @@ import com.exc33ded.library.settings.AppSettings
 import com.exc33ded.library.settings.LibraryDisplayMode
 import com.exc33ded.library.settings.MAX_COLUMNS
 import com.exc33ded.library.settings.MIN_COLUMNS
+import kotlin.math.roundToInt
 
 private val modeLabels = listOf(
     LibraryDisplayMode.OVERLAY_GRID to "Overlay",
@@ -577,7 +589,10 @@ fun DisplayOptions(settings: AppSettings, onChange: ((AppSettings) -> AppSetting
             Text("Columns: ${settings.columns}", style = MaterialTheme.typography.titleSmall)
             Slider(
                 value = settings.columns.toFloat(),
-                onValueChange = { v -> onChange { it.copy(columns = v.toInt()) } },
+                onValueChange = { v ->
+                    val n = v.roundToInt() // fires every drag frame: only write when the step changes
+                    if (n != settings.columns) onChange { it.copy(columns = n) }
+                },
                 valueRange = MIN_COLUMNS.toFloat()..MAX_COLUMNS.toFloat(),
                 steps = MAX_COLUMNS - MIN_COLUMNS - 1,
             )
@@ -606,7 +621,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -695,7 +709,7 @@ fun ListRow(b: BookEntity, s: AppSettings, modifier: Modifier = Modifier) = Row(
 ```
 
 - [ ] **Step 7: Library screen** — modify `ui/library/LibraryScreen.kt`:
-  1. Add parameter `settingsVm: SettingsViewModel = hiltViewModel()` and `val cfg by settingsVm.settings.collectAsStateWithLifecycle()`; add `var showDisplay by remember { mutableStateOf(false) }`.
+  1. Add parameter `settingsVm: SettingsViewModel = hiltViewModel()` and `val cfg = LocalAppSettings.current` (import `com.exc33ded.library.ui.theme.LocalAppSettings`; do NOT collect settings in this screen); add `var showDisplay by remember { mutableStateOf(false) }`.
   2. Replace the lone `OutlinedTextField` with a `Row(verticalAlignment = Alignment.CenterVertically)` containing the search field (`Modifier.weight(1f)`) and `IconButton(onClick = { showDisplay = true }) { Icon(Icons.Filled.GridView, contentDescription = "Display options") }`. (`GridView` is in the extended icon set already used for `AutoStories`.)
   3. Replace the `else ->` grid branch with:
      ```kotlin
@@ -793,17 +807,16 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.exc33ded.library.settings.ThemeMode
+import com.exc33ded.library.ui.theme.LocalAppSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
-    val s by vm.settings.collectAsStateWithLifecycle()
+    val s = LocalAppSettings.current
     Scaffold(topBar = {
         TopAppBar(
             title = { Text("Settings") },
