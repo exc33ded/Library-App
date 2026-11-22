@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 A personal, single-user Android book library app (Goodreads-like) in Kotlin + Jetpack Compose. Built in 7 phases; the design spec and per-phase plans are the source of truth:
 
 - Spec: `docs/superpowers/specs/2026-11-21-book-library-app-design.md`
+- Current status and next steps: `docs/HANDOFF.md`
 - Plans: `docs/superpowers/plans/` (one per phase; Phase 1 = library core)
 - Research behind the choices: `reports/Open source Android book app base.md`, `research_notes/`
 
