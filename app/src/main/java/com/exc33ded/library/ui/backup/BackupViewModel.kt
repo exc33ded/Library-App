@@ -20,7 +20,8 @@ class BackupViewModel @Inject constructor(private val manager: BackupManager) : 
     val state: StateFlow<BackupUiState> = _state.asStateFlow()
 
     fun export(uri: Uri) = run("export") {
-        "Exported ${manager.export(uri)} books"
+        val n = manager.export(uri)
+        "Exported $n ${if (n == 1) "book" else "books"}"
     }
 
     fun import(uri: Uri) = run("import") {

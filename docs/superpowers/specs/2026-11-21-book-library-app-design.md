@@ -238,3 +238,7 @@ strict title match 32/96 (33%); 23 "wrong", 41 failed (38 no match, 2 network, 1
 - Next fixes (cheap → expensive): prefer English titles (OL `lang=en` / Google Books with a key);
   query variants (author line alone, top line alone, fuzzy terms); then Phase 3 on-device vision model
   reading title/author directly.
+
+**2026-11-22 — after matching fixes (ML Kit text, Open Library only, replayed offline against cached lookups, 95 scored photos):**
+strict **61/95 (64%)**, author-lenient **71/95 (74%)** — up from 32/96 (33%) / ~41 (~43%). Changes: query variants (full → top two lines → each big line), candidate scoring (0.5 title words + 0.2 author surnames + 0.3 big-word coverage, fuzzy edit distance for OCR misreads), confidence threshold 0.75, best-overall fallback, ISBN-in-OCR-text shortcut (not exercised by this set: front covers only).
+**OCR engine verdict: inconclusive — ML Kit stays default.** The PaddleOCR PP-OCRv6 runs were not comparable (a 960 px detection cap and a rotation shortcut each degraded it; fair setup = 3 rotations at default size, ~50–90 s/photo on CPU, not completed). `litert-community/PP-OCRv6-Small-LiteRT` (≈34 MB of `.tflite`) shows an on-device PP-OCRv6 is feasible if a fair run beats ML Kit by ≥ 8 points. Details and the command to finish the run are in `docs/HANDOFF.md`.
