@@ -1,6 +1,7 @@
 package com.exc33ded.library.imports
 
 /** One recognised text line and its on-image height in px (bigger = more likely title/author). */
+@kotlinx.serialization.Serializable
 data class OcrLine(val text: String, val height: Int)
 
 private val NOISE = Regex(

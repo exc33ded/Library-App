@@ -32,14 +32,13 @@ class ImportProcessor @Inject constructor(
         val query = buildQuery(lines)
         if (query.isBlank()) return withPhoto.copy(state = ImportState.FAILED, error = "No readable text on the cover")
 
-        val shortQuery = buildQuery(lines.sortedByDescending { it.height }.take(2))
+        val matcher = CoverMatcher(lookup)
         return try {
-            val hit = lookup.search(query).firstOrNull()
-                ?: shortQuery.takeIf { it != query }?.let { lookup.search(it).firstOrNull() }
+            val hit = matcher.match(lines)
             if (hit == null) {
                 withPhoto.copy(state = ImportState.FAILED, query = query, error = "No match for \"$query\"")
             } else {
-                withPhoto.copy(state = ImportState.REVIEW, query = query, resultJson = Json.encodeToString(lookup.details(hit)), error = null)
+                withPhoto.copy(state = ImportState.REVIEW, query = query, resultJson = Json.encodeToString(lookup.details(hit.candidate)), error = null)
             }
         } catch (e: CancellationException) {
             throw e
