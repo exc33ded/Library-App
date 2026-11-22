@@ -16,8 +16,8 @@ Today every tuning run needs the emulator and the full 96-photo pipeline. Instea
 ## Matching changes (in `imports/` and `metadata/`)
 - **Query variants:** `buildQueries(lines): List<String>` ordered full → top line + author-ish line → each top line alone. `ImportProcessor` tries them in order until a candidate passes the score threshold.
 - **Candidate ranking:** `scoreCandidate(ocrText, candidate)` = token overlap of OCR words with title + author words (fuzzy: edit distance ≤ 1 for words ≥ 5 letters, to absorb OCR misreads like "velloweace"). Pick the best candidate above a threshold instead of `firstOrNull()`.
-- **English preference:** pass `lang=eng` to Open Library search; `langRestrict=en` to Google Books; among equal scores prefer English edition titles.
-- **Benchmark scoring:** a result counts as same-work when title matches OR author matches and the Open Library work key matches (`tools/benchmark.py` and the JVM test share the rule: normalised-title ≥ 60% word overlap, or same author surname + any title word).
+- **English preference:** comes from ranking (a candidate whose title matches the OCR text beats an original-language edition). Source-level `lang`/`langRestrict` params are deferred: they would also change manual search, so add them only if the benchmark shows a gain.
+- **Benchmark scoring:** two numbers: *strict* (≥ 60% of the label's title words in the found title) and *author-lenient* (strict OR same author surname; an upper bound that forgives original-language titles).
 
 ## OCR comparison (decision rule)
 Run the same matching eval on `ocr_mlkit.json` and `ocr_paddle.json`. Adopt PaddleOCR on Android only if it improves same-work accuracy by ≥ 8 points over ML Kit **after** the matching fixes, and an Android runtime (NCNN/ONNX/ExecuTorch) fits the 6 GB phone budget. Otherwise ML Kit stays. Urdu/Arabic covers are expected to need the Phase 3 vision model either way (PP-OCRv6's unified model has no Arabic; the v5 Arabic model would be a separate download).
