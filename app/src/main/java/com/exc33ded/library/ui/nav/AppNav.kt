@@ -58,7 +58,8 @@ import com.exc33ded.library.ui.backup.BackupScreen
 import com.exc33ded.library.ui.book.BookDetailScreen
 import com.exc33ded.library.ui.book.BookEditScreen
 import com.exc33ded.library.ui.categories.CategoriesScreen
-import com.exc33ded.library.ui.common.PlaceholderScreen
+import com.exc33ded.library.ui.feed.FeedScreen
+import com.exc33ded.library.ui.feed.ManageFeedsScreen
 import com.exc33ded.library.ui.find.FindBookScreen
 import com.exc33ded.library.ui.imports.ImportScreen
 import com.exc33ded.library.ui.library.LibraryScreen
@@ -175,7 +176,8 @@ fun AppNav() {
                             onScanIsbn = { scanIsbn() },
                         )
                     }
-                    entry<FeedKey> { PlaceholderScreen("Feed — Phase 6") }
+                    entry<FeedKey> { FeedScreen(onManage = { push(ManageFeedsKey) }) }
+                    entry<ManageFeedsKey> { ManageFeedsScreen(onBack = { backStack.removeLastOrNull() }) }
                     entry<StatsKey> { StatsScreen() }
                     entry<ProfileKey> { ProfileScreen(onOpenSettings = { push(SettingsKey) }) }
                     entry<SettingsKey> { SettingsScreen(onBack = { backStack.removeLastOrNull() }, onOpenModels = { push(ModelsStorageKey) }, onOpenBackup = { push(BackupKey) }) }

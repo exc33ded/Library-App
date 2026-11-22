@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable data object LibraryKey : NavKey
 @Serializable data object FeedKey : NavKey
 @Serializable data object StatsKey : NavKey
+@Serializable data object ManageFeedsKey : NavKey
 @Serializable data object ProfileKey : NavKey
 @Serializable data class BookDetailKey(val id: String) : NavKey
 @Serializable data class BookEditKey(val id: String? = null, val prefill: BookCandidate? = null, val importId: String? = null) : NavKey
