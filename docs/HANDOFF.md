@@ -82,6 +82,16 @@ with free-space check and per-model delete.
 
 (5) **Navigation motion + Profile** (user decisions 2026-11-22): tab switches get a *slide + fade* (direction follows the tab's position in the bar; timings from `MaterialTheme.motionScheme`, per the Phase 7 motion rule); Profile screen holds editable **name + photo** (gallery pick), a **yearly reading goal** with progress ring, a compact **stats summary** card, and a **bio / favourite quote** line, with Settings still reachable from it. Needs its own spec → plan; stored in DataStore/Room (not yet designed).
 
+## Ideas from OpenShelf (F-Droid `org.ftena.openshelf`; GPL, so ideas only, no code copied)
+
+From its F-Droid listing, ranked by value for us:
+1. **ISBN from OCR as a shortcut** (it combines barcode detection with ISBN OCR). If the OCR text of a photo contains a valid ISBN-10/13 (`Isbn.normalize` already validates), look it up by ISBN first — far more reliable than title matching, and works for the back cover / copyright page. Cheap to add in `ImportProcessor` and measurable with the replay benchmark.
+2. **Inventaire as a third lookup source** (OpenShelf uses Open Library or Inventaire). Open data with better multilingual/Wikidata coverage; could help the non-English titles we miss. Evaluate offline with the benchmark cache pattern before adopting.
+3. **Search also over personal notes** (we search title/author only) — trivial.
+4. **Saved filters as "shelves"** (auto-updating) and a **Paused** status — possible later; categories + status filters already cover most of it.
+5. **Reading streaks / history widgets** — natural extension of the Profile stats card.
+Not needed: grouping by imprint/collection.
+
 ## Next steps, in order
 
 1. **User:** confirm/correct `labels.csv` (flagged: #1 envelope "Not a book", Urdu covers #7/#8/#32,
