@@ -64,7 +64,18 @@ class MatchBenchmarkTest {
         assumeTrue("set BENCH_OCR and BENCH_LABELS to run", ocrPath != null && labelsPath != null)
         val dumps = Json.decodeFromString<List<OcrDump>>(File(ocrPath!!).readText())
         val labels = File(labelsPath!!).readLines().drop(1).filter { it.isNotBlank() }.map(::csvRow).associateBy { it[0] }
-        val matcher = CoverMatcher(MetadataLookup(OpenLibrarySource(buildHttpClient(OkHttp.create())), NoSource))
+        // Open Library answers are cached on disk (BENCH_CACHE) so tuning the scoring replays instantly and offline.
+        val cacheFile = System.getenv("BENCH_CACHE")?.let(::File)
+        val cached: MutableMap<String, List<BookCandidate>> =
+            cacheFile?.takeIf { it.exists() }?.let { Json.decodeFromString(it.readText()) } ?: mutableMapOf()
+        val live = OpenLibrarySource(buildHttpClient(OkHttp.create()))
+        val caching = object : BookSource {
+            override suspend fun byIsbn(isbn: String) = live.byIsbn(isbn)
+            override suspend fun search(query: String, limit: Int): List<BookCandidate> =
+                cached.getOrPut(query) { delay(250); live.search(query, limit) } // polite pause only on real requests
+            override suspend fun enrich(c: BookCandidate) = c
+        }
+        val matcher = CoverMatcher(MetadataLookup(caching, NoSource))
 
         var strict = 0; var lenient = 0; var scored = 0
         val report = StringBuilder()
@@ -74,7 +85,6 @@ class MatchBenchmarkTest {
             if (title.equals("Not a book", true)) continue
             scored++
             val hit = try { matcher.match(d.lines) } catch (e: Exception) { report.appendLine("ERROR  $title: ${e.message}"); null }
-            delay(250) // be polite to Open Library
             when {
                 hit == null -> report.appendLine("FAILED $title")
                 titleOk(hit.candidate.title, title) -> { strict++; lenient++ }
@@ -84,6 +94,7 @@ class MatchBenchmarkTest {
         }
         val head = "photos=$scored strict=$strict (${strict * 100 / maxOf(scored, 1)}%) authorLenient=$lenient (${lenient * 100 / maxOf(scored, 1)}%)"
         File(System.getenv("BENCH_OUT") ?: "bench-report.txt").writeText(head + "\n" + report)
+        cacheFile?.writeText(Json.encodeToString(cached))
         println(head)
     }
 }

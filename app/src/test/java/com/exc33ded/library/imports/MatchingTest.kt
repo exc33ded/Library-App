@@ -27,11 +27,20 @@ class MatchingTest {
         assertFalse(fuzzyHas("plague", setOf("plaquez9"))) // too far
     }
 
-    @Test fun exactTitleAndAuthorScoresOne() =
-        assertEquals(1.0, scoreCandidate(yellowLines, BookCandidate("Yellowface", "R. F. Kuang")), 1e-9)
+    // The cover says "Rebecca" but the candidate has initials only, so 2 of the 3 big words are explained.
+    @Test fun exactTitleAndSurnameScoresPointNine() =
+        assertEquals(0.9, scoreCandidate(yellowLines, BookCandidate("Yellowface", "R. F. Kuang")), 1e-9)
 
-    @Test fun titleOnlyScoresPointSeven() =
-        assertEquals(0.7, scoreCandidate(listOf(OcrLine("YELLOWFACE", 120)), BookCandidate("Yellowface", "R. F. Kuang")), 1e-9)
+    @Test fun fullCoverExplainedScoresOne() =
+        assertEquals(1.0, scoreCandidate(yellowLines, BookCandidate("Yellowface", "Rebecca F. Kuang")), 1e-9)
+
+    @Test fun shortTitleDoesNotBeatTheFullOne() {
+        val lines = listOf(OcrLine("100 SELECTED", 100), OcrLine("POEMS", 100))
+        assertTrue(scoreCandidate(lines, BookCandidate("100 Selected Poems", "")) > scoreCandidate(lines, BookCandidate("Poems", "")))
+    }
+
+    @Test fun titleOnlyScoresPointEight() =
+        assertEquals(0.8, scoreCandidate(listOf(OcrLine("YELLOWFACE", 120)), BookCandidate("Yellowface", "R. F. Kuang")), 1e-9)
 
     @Test fun stopWordsDoNotCount() =
         assertEquals(1.0, scoreCandidate(listOf(OcrLine("PLAGUE", 100), OcrLine("CAMUS", 40)), BookCandidate("The Plague", "Albert Camus")), 1e-9)

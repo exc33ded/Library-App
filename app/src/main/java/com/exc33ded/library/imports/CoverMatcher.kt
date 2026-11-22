@@ -7,18 +7,17 @@ data class CoverMatch(val candidate: BookCandidate, val query: String, val score
 
 /**
  * Tries each query variant, ranks the results against the OCR text and returns the first confident one.
- * If none is confident, falls back to the first result of the first query that returned anything
- * (the review screen lets the user correct it). Lookup errors propagate to the caller.
+ * If none is confident, returns the best-scoring candidate seen across all variants (the review screen
+ * lets the user correct it). Lookup errors propagate to the caller.
  */
 class CoverMatcher(private val lookup: MetadataLookup) {
     suspend fun match(lines: List<OcrLine>): CoverMatch? {
-        var fallback: CoverMatch? = null
+        var best: CoverMatch? = null
         for (q in buildQueries(lines)) {
-            val results = lookup.search(q)
-            val best = results.map { CoverMatch(it, q, scoreCandidate(lines, it)) }.maxByOrNull { it.score } ?: continue
-            if (best.score >= MATCH_THRESHOLD) return best
-            if (fallback == null) fallback = CoverMatch(results.first(), q, scoreCandidate(lines, results.first()))
+            val top = lookup.search(q).map { CoverMatch(it, q, scoreCandidate(lines, it)) }.maxByOrNull { it.score } ?: continue
+            if (top.score >= MATCH_THRESHOLD) return top
+            if (best == null || top.score > best.score) best = top
         }
-        return fallback
+        return best
     }
 }

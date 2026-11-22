@@ -4,7 +4,7 @@ import com.exc33ded.library.metadata.BookCandidate
 import kotlin.math.abs
 
 /** A candidate scoring at least this (0..1) against the OCR text is accepted without trying more queries. */
-const val MATCH_THRESHOLD = 0.6
+const val MATCH_THRESHOLD = 0.75 // author + big-word overlap alone tops out at 0.5, so the title has to match
 
 private val STOP_WORDS = setOf("the", "a", "an", "of", "and", "in", "to", "on", "for", "la", "le", "el", "der", "die", "das")
 
@@ -30,14 +30,21 @@ fun fuzzyHas(word: String, ocr: Set<String>): Boolean {
     return max > 0 && ocr.any { abs(it.length - word.length) <= max && editDistance(it, word) <= max }
 }
 
-/** 0.7 * share of title words found in the OCR text + 0.3 * share of author surnames found. */
+/**
+ * 0.5 * share of title words found in the OCR text + 0.2 * share of author surnames found
+ * + 0.3 * share of the cover's big words (the words buildQuery keeps) that the candidate explains,
+ * so a short title like "Poems" no longer beats "100 Selected Poems".
+ */
 fun scoreCandidate(lines: List<OcrLine>, c: BookCandidate): Double {
     val ocr = lines.flatMap { tokens(it.text) }.toSet()
     val allTitle = tokens(c.title)
     val title = allTitle.filter { it !in STOP_WORDS }.ifEmpty { allTitle }
     val surnames = c.authors.split(',').flatMap { tokens(it.trim().substringAfterLast(' ')) }
     fun share(words: List<String>) = if (words.isEmpty()) 0.0 else words.count { fuzzyHas(it, ocr) }.toDouble() / words.size
-    return 0.7 * share(title) + 0.3 * share(surnames)
+    val core = tokens(buildQuery(lines)).toSet()
+    val candidateWords = (allTitle + tokens(c.authors)).toSet()
+    val explained = if (core.isEmpty()) 0.0 else core.count { fuzzyHas(it, candidateWords) }.toDouble() / core.size
+    return 0.5 * share(title) + 0.2 * share(surnames) + 0.3 * explained
 }
 
 /** Search queries to try in order: everything, the two biggest lines, then each of the three biggest lines alone. */

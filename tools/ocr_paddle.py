@@ -8,6 +8,8 @@ from paddleocr import PaddleOCR
 
 MAX_EDGE = 1600
 ROTATIONS = (0, 90, 270)
+UPRIGHT_ENOUGH = 15  # letters; below this the photo may be sideways, so also try 90/270
+DET_SIDE = 960  # detection runs on a 960px max side: ~3x faster than 1600 and enough for cover titles
 
 
 def make_ocr():
@@ -40,7 +42,7 @@ def read_result(res):
 
 def recognize(ocr, image):
     lines = []
-    for res in ocr.predict(np.array(image)):
+    for res in ocr.predict(np.array(image), text_det_limit_side_len=DET_SIDE, text_det_limit_type="max"):
         texts, polys = read_result(res)
         for text, poly in zip(texts, polys):
             if not str(text).strip():
@@ -76,10 +78,12 @@ def main():
     for name in sorted(n for n in os.listdir(photos_dir) if n.lower().endswith(".jpg")):
         print(f"OCR: {name}", file=sys.stderr)
         base = prepare(os.path.join(photos_dir, name))
-        lines = max(
-            (recognize(ocr, base.rotate(deg, expand=True)) for deg in ROTATIONS),
-            key=letter_count,
-        )
+        lines = recognize(ocr, base)
+        if letter_count(lines) < UPRIGHT_ENOUGH:
+            lines = max(
+                [lines] + [recognize(ocr, base.rotate(deg, expand=True)) for deg in ROTATIONS[1:]],
+                key=letter_count,
+            )
         entries.append({"file": name, "lines": lines})
     with open(out_path, "w", encoding="utf-8") as out:
         json.dump(entries, out, ensure_ascii=False, indent=2)

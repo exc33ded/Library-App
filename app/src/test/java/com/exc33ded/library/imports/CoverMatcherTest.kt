@@ -37,7 +37,7 @@ class CoverMatcherTest {
         assertEquals("yellowface", m.query)
     }
 
-    @Test fun fallsBackToFirstResultOfFirstNonEmptyQueryWhenNothingIsConfident() = runTest {
+    @Test fun returnsTheBestScoringCandidateWhenNothingIsConfident() = runTest {
         val m = matcher(MapSource(mapOf("yellowface rebecca f kuang some publisher" to listOf(peste)))).match(lines)
         assertEquals("La Peste", m!!.candidate.title)
     }
