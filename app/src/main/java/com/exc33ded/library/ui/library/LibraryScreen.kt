@@ -23,6 +23,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.exc33ded.library.settings.LibraryDisplayMode
 import com.exc33ded.library.ui.common.PlaceholderScreen
 import com.exc33ded.library.ui.common.StatusSelector
+import com.exc33ded.library.ui.profile.LocalProfile
 import com.exc33ded.library.ui.settings.DisplayOptions
 import com.exc33ded.library.ui.settings.SettingsViewModel
 import com.exc33ded.library.ui.theme.LocalAppSettings
@@ -57,6 +59,9 @@ fun LibraryScreen(
     val cfg = LocalAppSettings.current
     var showDisplay by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        val profile = LocalProfile.current
+        if (profile.name.isNotBlank())
+            Text("Hi, ${profile.name}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = s.filter.query, onValueChange = vm::setQuery, singleLine = true,
